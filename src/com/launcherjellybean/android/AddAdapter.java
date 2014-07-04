@@ -31,6 +31,7 @@ import com.launcherjellybean.android.R;
 
 /**
  * Adapter showing the types of items that can be added to a {@link Workspace}.
+ * 可以被添加进Workspace的Item的类型的Adapter
  */
 public class AddAdapter extends BaseAdapter {
 
@@ -38,6 +39,7 @@ public class AddAdapter extends BaseAdapter {
 
     private final ArrayList<ListItem> mItems = new ArrayList<ListItem>();
 
+    //Item的类型
     public static final int ITEM_SHORTCUT = 0;
     public static final int ITEM_APPWIDGET = 1;
     public static final int ITEM_APPLICATION = 2;

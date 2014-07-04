@@ -17,6 +17,7 @@
 package com.launcherjellybean.android;
 
 /**
+ * 处理拖动时的滚动. 仅workspace实现此接口.仅workspace可以在拖动状态,并且进入左右边缘的滚动区域时左右滚动.
  * Handles scrolling while dragging
  *
  */

@@ -21,16 +21,19 @@ import android.view.View;
 import com.launcherjellybean.android.DropTarget.DragObject;
 
 /**
+ * 可以发起拖动动作的源的抽象,即在它上面可以发起拖动. 如Folder, workspace等.
+ * 这个接口抽象的作用主要是回调,当它上面的Item拖动删除或Drop到某目标后能够收到回调通知并作出处理动作.
  * Interface defining an object that can originate a drag.
- *
  */
 public interface DragSource {
     /**
+     * 是否支持拖动删除
      * @return whether items dragged from this source supports
      */
     boolean supportsFlingToDelete();
 
     /**
+     * 删除完成后的回调方法
      * A callback specifically made back to the source after an item from this source has been flung
      * to be deleted on a DropTarget.  In such a situation, this method will be called after
      * onDropCompleted, and more importantly, after the fling animation has completed.
@@ -38,6 +41,7 @@ public interface DragSource {
     void onFlingToDeleteCompleted();
 
     /**
+     * 当DragSource上一个Item, drop到DropTarget上,完成后的回调方法
      * A callback made back to the source after an item from this source has been dropped on a
      * DropTarget.
      */

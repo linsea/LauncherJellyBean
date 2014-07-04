@@ -132,7 +132,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     protected int mCellCountY = 0;
     protected boolean mCenterPagesVertically;
     protected boolean mAllowOverScroll = true;
-    protected int mUnboundedScrollX;
+    protected int mUnboundedScrollX;//滚动条在X轴的位置
     protected int[] mTempVisiblePagesRange = new int[2];
     protected boolean mForceDrawAllChildrenNextFrame;
 
@@ -294,6 +294,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
      * Updates the scroll of the current page immediately to its final scroll position.  We use this
      * in CustomizePagedView to allow tabs to share the same PagedView while resetting the scroll of
      * the previous tab page.
+     * 只在CustomizePagedView里使用的,当切换tab时,不显示Scroller的动画,只接切换到目的页.
+     * 这样看起来就像是TAB,而不是Page.
      */
     protected void updateCurrentPageScroll() {
         int offset = getChildOffset(mCurrentPage);
@@ -814,6 +816,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     }
 
     @Override
+    //当一个View(即第一个参数)要求父ViewGroup把自己显示在屏幕上时,就可以调用父ViewGroup的这个方法.
+    //如果父视图可以完成这个请求,返回true,否则返回false.
     public boolean requestChildRectangleOnScreen(View child, Rect rectangle, boolean immediate) {
         int page = indexToPage(indexOfChild(child));
         if (page != mCurrentPage || !mScroller.isFinished()) {
@@ -1513,7 +1517,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         }
 
         pageBeginMoving();
-        awakenScrollBars(duration);
+        awakenScrollBars(duration);//唤醒滚动条
         if (duration == 0) {
             duration = Math.abs(delta);
         }
@@ -1535,7 +1539,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     public void scrollLeft() {
         if (mScroller.isFinished()) {
             if (mCurrentPage > 0) snapToPage(mCurrentPage - 1);
-        } else {
+        } else {//如果还在滑动过程中,则继续滑到下下一页
             if (mNextPage > 0) snapToPage(mNextPage - 1);
         }
     }
@@ -1610,6 +1614,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     protected void loadAssociatedPages(int page) {
         loadAssociatedPages(page, false);
     }
+    
+    /**immediateAndOnly:马上加载,并且仅仅加载这一页*/
     protected void loadAssociatedPages(int page, boolean immediateAndOnly) {
         if (mContentIsRefreshable) {
             final int count = getChildCount();
@@ -1620,7 +1626,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                         + upperPageBound);
                 // First, clear any pages that should no longer be loaded
                 for (int i = 0; i < count; ++i) {
-                    Page layout = (Page) getPageAt(i);
+                    Page layout = (Page) getPageAt(i);//说明PagedView的子视图只能是Page
                     if ((i < lowerPageBound) || (i > upperPageBound)) {
                         if (layout.getPageChildCount() > 0) {
                             layout.removeAllViewsOnPage();
@@ -1644,9 +1650,11 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         }
     }
 
+    /** 返回这一页左边的那一页的页值*/
     protected int getAssociatedLowerPageBound(int page) {
         return Math.max(0, page - 1);
     }
+    /** 返回这一页右边的那一页的页值*/
     protected int getAssociatedUpperPageBound(int page) {
         final int count = getChildCount();
         return Math.min(page + 1, count - 1);
@@ -1687,6 +1695,9 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
             // We must force a measure after we've loaded the pages to update the content width and
             // to determine the full scroll width
+            
+            //测量这个View应该有多大,传入的"说明参数"是指示子View,限制它的大小.
+            //其实真正的测量工作是在onMeasure(int, int) 方法里做的,这个方法最终调用onMeasure完成测量工作.
             measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
 
@@ -1708,6 +1719,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         }
     }
 
+    /**从父视图中找到页面指示条*/
     protected View getScrollingIndicator() {
         // We use mHasScrollIndicator to prevent future lookups if there is no sibling indicator
         // found
@@ -1725,7 +1737,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     }
 
     protected boolean isScrollingIndicatorEnabled() {
-        return !LauncherApplication.isScreenLarge();
+        return !LauncherApplication.isScreenLarge();//大屏不支持页面指示条,为什么???
     }
 
     Runnable hideScrollingIndicatorRunnable = new Runnable() {
@@ -1735,7 +1747,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         }
     };
     protected void flashScrollingIndicator(boolean animated) {
-        removeCallbacks(hideScrollingIndicatorRunnable);
+        removeCallbacks(hideScrollingIndicatorRunnable);//请求Handler移除MessageQueue里的这个Runnable
         showScrollingIndicator(!animated);
         postDelayed(hideScrollingIndicatorRunnable, sScrollIndicatorFlashDuration);
     }
@@ -1831,7 +1843,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         int lastChildIndex = Math.max(0, getChildCount() - 1);
         int maxScrollX = getChildOffset(lastChildIndex) - getRelativeChildOffset(lastChildIndex);
         int trackWidth = pageWidth - mScrollIndicatorPaddingLeft - mScrollIndicatorPaddingRight;
-        int indicatorWidth = mScrollIndicator.getMeasuredWidth() -
+        int indicatorWidth = mScrollIndicator.getMeasuredWidth() - //getMeasuredWidth()包含左右Padding
                 mScrollIndicator.getPaddingLeft() - mScrollIndicator.getPaddingRight();
 
         float offset = Math.max(0f, Math.min(1f, (float) getScrollX() / maxScrollX));

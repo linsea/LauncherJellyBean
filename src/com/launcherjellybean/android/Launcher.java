@@ -3151,7 +3151,7 @@ public final class Launcher extends Activity
     public boolean setLoadOnResume() {
         if (mPaused) {
             Log.i(TAG, "setLoadOnResume");
-            mOnResumeNeedsLoad = true;
+            mOnResumeNeedsLoad = true;//指示onResume时需要重新Load
             return true;
         } else {
             return false;

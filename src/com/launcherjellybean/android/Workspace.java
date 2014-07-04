@@ -124,10 +124,13 @@ public class Workspace extends SmoothPagedView
     static Rect mPortraitCellLayoutMetrics = null;
 
     /**
+     * 正在被拖的CellLayout.
      * The CellLayout that is currently being dragged over
      */
     private CellLayout mDragTargetLayout = null;
     /**
+     * 将要释放时的CellLayout,它里面的某个小格会画出拖动中的图标的外框,
+     * 以示释放时图标将会放置在此格.
      * The CellLayout that we will show as glowing
      */
     private CellLayout mDragOverlappingLayout = null;
@@ -172,7 +175,7 @@ public class Workspace extends SmoothPagedView
     private boolean mInScrollArea = false;
 
     private final HolographicOutlineHelper mOutlineHelper = new HolographicOutlineHelper();
-    private Bitmap mDragOutline = null;
+    private Bitmap mDragOutline = null;//图标的轮廓，在桌面上的对应的位置绘制图标的轮廓，显示当手松开图标时它在桌面上的落点
     private final Rect mTempRect = new Rect();
     private final int[] mTempXY = new int[2];
     private float mOverscrollFade = 0;
@@ -1889,6 +1892,11 @@ public class Workspace extends SmoothPagedView
         beginDragShared(child, this);
     }
 
+    /**
+     * 主要所做的工作就是计算拖拽目标位于DragLayer中的坐标和尺寸大小
+     * @param child
+     * @param source
+     */
     public void beginDragShared(View child, DragSource source) {
         Resources r = getResources();
 
@@ -1897,7 +1905,8 @@ public class Workspace extends SmoothPagedView
 
         final int bmpWidth = b.getWidth();
         final int bmpHeight = b.getHeight();
-
+        //我们将在DragLayer中绘制“拖拽后”的图标，通过DragLayer.getLoactionInDragLayer()  
+        //获取在DragLayer中的坐标，并存放在mTempXY中。
         mLauncher.getDragLayer().getLocationInDragLayer(child, mTempXY);
         int dragLayerX =
                 Math.round(mTempXY[0] - (bmpWidth - child.getScaleX() * child.getWidth()) / 2);
@@ -1907,6 +1916,9 @@ public class Workspace extends SmoothPagedView
 
         Point dragVisualizeOffset = null;
         Rect dragRect = null;
+        
+        //无论child是BubbleTextView或者PagedViewIncon或者FolderIcon的实例  
+        //定位图标的位置与大小 
         if (child instanceof BubbleTextView || child instanceof PagedViewIcon) {
             int iconSize = r.getDimensionPixelSize(R.dimen.app_icon_size);
             int iconPaddingTop = r.getDimensionPixelSize(R.dimen.app_icon_padding_top);
@@ -3308,7 +3320,7 @@ public class Workspace extends SmoothPagedView
      * screen while a scroll is in progress.
      */
     public CellLayout getCurrentDropLayout() {
-        return (CellLayout) getChildAt(getNextPage());
+        return (CellLayout) getChildAt(getNextPage());//这里说明workspace的子视图是Celllayout
     }
 
     /**
@@ -3375,6 +3387,7 @@ public class Workspace extends SmoothPagedView
         hideScrollingIndicator(false);
     }
 
+    /**把这个CellLayout中的所有图标信息(坐标,容器,屏幕等)更新到数据库中去*/
     void updateItemLocationsInDatabase(CellLayout cl) {
         int count = cl.getShortcutsAndWidgets().getChildCount();
 

@@ -32,6 +32,11 @@ import android.view.animation.DecelerateInterpolator;
 
 import com.launcherjellybean.android.R;
 
+/**
+ * 拖动的视图,可以被添加进DragLayer层, 可以放大,移动,动画.
+ * 参照亲自体验的效果.
+ *
+ */
 public class DragView extends View {
     private static float sDragAlpha = 1f;
 
@@ -43,7 +48,7 @@ public class DragView extends View {
 
     private Point mDragVisualizeOffset = null;
     private Rect mDragRegion = null;
-    private DragLayer mDragLayer = null;
+    private DragLayer mDragLayer = null;//这个DragView所在的DragLayer
     private boolean mHasDrawn = false;
     private float mCrossFadeProgress = 0f;
 
@@ -55,6 +60,7 @@ public class DragView extends View {
     /**
      * Construct the drag view.
      * <p>
+     *  registration point 就是视图上手指触摸的中心点
      * The registration point is the point inside our view that the touch events should
      * be centered upon.
      *

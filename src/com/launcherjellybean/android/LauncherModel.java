@@ -63,6 +63,7 @@ import java.util.List;
  * Maintains in-memory state of the Launcher. It is expected that there should be only one
  * LauncherModel object held in a static. Also provide APIs for updating the database state
  * for the Launcher.
+ * "Model" of MVC pattern 
  */
 public class LauncherModel extends BroadcastReceiver {
     static final boolean DEBUG_LOADERS = false;
@@ -77,11 +78,13 @@ public class LauncherModel extends BroadcastReceiver {
     private final Object mLock = new Object();
     private DeferredHandler mHandler = new DeferredHandler();
     private LoaderTask mLoaderTask;
-
+    
+    //带有looper的一个线程,这里作为worker线程
     private static final HandlerThread sWorkerThread = new HandlerThread("launcher-loader");
     static {
         sWorkerThread.start();
     }
+    //可以通过此handler往sWorkerThread worker线程里发送消息的handler
     private static final Handler sWorker = new Handler(sWorkerThread.getLooper());
 
     // We start off with everything not loaded.  After that, we assume that
@@ -112,11 +115,12 @@ public class LauncherModel extends BroadcastReceiver {
     static final HashMap<Long, FolderInfo> sFolders = new HashMap<Long, FolderInfo>();
 
     // sDbIconCache is the set of ItemInfos that need to have their icons updated in the database
+    //需要更新它们自己的icon的 ItemInfo -> 图标字节 的Map, 需要与缓存区mIconCache对比是否相同再进行选择更新
     static final HashMap<Object, byte[]> sDbIconCache = new HashMap<Object, byte[]>();
 
     // </ only access in worker thread >
 
-    private IconCache mIconCache;
+    private IconCache mIconCache;//已经加载的图标,缓存区
     private Bitmap mDefaultIcon;
 
     private static int mCellCountX;
@@ -715,6 +719,10 @@ public class LauncherModel extends BroadcastReceiver {
         return isLaunching;
     }
 
+    /**
+     * 开始加载的工作
+     * @param isLaunching
+     */
     public void startLoader(boolean isLaunching) {
         synchronized (mLock) {
             if (DEBUG_LOADERS) {
@@ -1008,10 +1016,10 @@ public class LauncherModel extends BroadcastReceiver {
             // Make sure the default workspace is loaded, if needed
             mApp.getLauncherProvider().loadDefaultFavoritesIfNecessary();
 
-            sWorkspaceItems.clear();
+            sWorkspaceItems.clear(); //存放container为CONTAINER_DESKTOP和CONTAINER_HOTSEAT类型的item  
             sAppWidgets.clear();
-            sFolders.clear();
-            sItemsIdMap.clear();
+            sFolders.clear();//存放的FolderInfo.id和FolderInfo组成的映射对  
+            sItemsIdMap.clear();//所有的item的id和ItemInfo组成的映射对  
             sDbIconCache.clear();
 
             final ArrayList<Long> itemsToRemove = new ArrayList<Long>();
@@ -1022,6 +1030,10 @@ public class LauncherModel extends BroadcastReceiver {
             // +1 for the hotseat (it can be larger than the workspace)
             // Load workspace in reverse order to ensure that latest items are loaded first (and
             // before any earlier duplicates)
+            //代表屏幕中的每一个单位的方格是否被占用。  
+            //第一维表示分屏的序号，其中最后一个代表Hotseat  
+            //第二维表示x方向方格的序号  
+            //第三维表示y方向方格的序号 
             final ItemInfo occupied[][][] =
                     new ItemInfo[Launcher.SCREEN_COUNT + 1][mCellCountX + 1][mCellCountY + 1];
 
@@ -1109,6 +1121,7 @@ public class LauncherModel extends BroadcastReceiver {
                                 info.cellY = c.getInt(cellYIndex);
 
                                 // check & update map of what's occupied
+                                //检查这个item所占的空间是否空闲，true表示空闲 
                                 if (!checkItemPlacement(occupied, info)) {
                                     break;
                                 }
@@ -1116,15 +1129,22 @@ public class LauncherModel extends BroadcastReceiver {
                                 switch (container) {
                                 case LauncherSettings.Favorites.CONTAINER_DESKTOP:
                                 case LauncherSettings.Favorites.CONTAINER_HOTSEAT:
-                                    sWorkspaceItems.add(info);
+                                    //当加载的item类型为ITEM_TYPE_APPLICATION或者ITEM_TYPE_SHORTCUT  
+                                    //并且所属的container为CONTAINER_DESKTOP或者CONTAINER_HOTSEAT时  
+                                    //将其添加到sWorkspaceItems中  
+                                    sWorkspaceItems.add(info);//MYTODO: 加我们的+图标
                                     break;
                                 default:
                                     // Item is in a user folder
+                                    //如果item的container不是上述两者，则代表它处于一个folder中  
+                                    //将其添加到所属的folderInfo中  
                                     FolderInfo folderInfo =
                                             findOrMakeFolder(sFolders, container);
                                     folderInfo.add(info);
                                     break;
                                 }
+                                //所有的ITEM_TYPE_APPLICATION和ITEM_TYPE_SHORTCUT类型的item都需要  
+                                //加入到sItemsIdMap的映射对中。  
                                 sItemsIdMap.put(info.id, info);
 
                                 // now that we've loaded everthing re-save it with the
@@ -1312,7 +1332,7 @@ public class LauncherModel extends BroadcastReceiver {
                 public void run() {
                     Callbacks callbacks = tryGetCallbacks(oldCallbacks);
                     if (callbacks != null) {
-                        callbacks.startBinding();
+                        callbacks.startBinding();//开始绑定  
                     }
                 }
             });
@@ -1326,6 +1346,7 @@ public class LauncherModel extends BroadcastReceiver {
                     public void run() {
                         Callbacks callbacks = tryGetCallbacks(oldCallbacks);
                         if (callbacks != null) {
+                        	//绑定application、shortcut、folder三种内容  
                             callbacks.bindItems(workspaceItems, start, start+chunkSize);
                         }
                     }
@@ -1478,6 +1499,7 @@ public class LauncherModel extends BroadcastReceiver {
                 if (i == 0) {
                     mAllAppsList.clear();
                     final long qiaTime = DEBUG_LOADERS ? SystemClock.uptimeMillis() : 0;
+                    //查询所有应该在桌面上显示的app  
                     apps = packageManager.queryIntentActivities(mainIntent, 0);
                     if (DEBUG_LOADERS) {
                         Log.d(TAG, "queryIntentActivities took "
@@ -1494,14 +1516,14 @@ public class LauncherModel extends BroadcastReceiver {
                         // There are no apps?!?
                         return;
                     }
-                    if (mBatchSize == 0) {
+                    if (mBatchSize == 0) {//mBatchSize==0表示一次性加载所有的应用 
                         batchSize = N;
                     } else {
                         batchSize = mBatchSize;
                     }
 
                     final long sortTime = DEBUG_LOADERS ? SystemClock.uptimeMillis() : 0;
-                    Collections.sort(apps,
+                    Collections.sort(apps,//将获取到的app的信息按名字进行排序  
                             new LauncherModel.ShortcutNameComparator(packageManager, mLabelCache));
                     if (DEBUG_LOADERS) {
                         Log.d(TAG, "sort took "
@@ -1512,22 +1534,22 @@ public class LauncherModel extends BroadcastReceiver {
                 final long t2 = DEBUG_LOADERS ? SystemClock.uptimeMillis() : 0;
 
                 startIndex = i;
-                for (int j=0; i<N && j<batchSize; j++) {
+                for (int j=0; i<N && j<batchSize; j++) {//添加一批应用信息到mAllAppsList，每一批添加N个  
                     // This builds the icon bitmaps.
                     mAllAppsList.add(new ApplicationInfo(packageManager, apps.get(i),
                             mIconCache, mLabelCache));
                     i++;
                 }
 
-                final boolean first = i <= batchSize;
+                final boolean first = i <= batchSize;//i < batchSize表示添加的是第一批信息  
                 final Callbacks callbacks = tryGetCallbacks(oldCallbacks);
                 final ArrayList<ApplicationInfo> added = mAllAppsList.added;
-                mAllAppsList.added = new ArrayList<ApplicationInfo>();
+                mAllAppsList.added = new ArrayList<ApplicationInfo>();//每添加完一批之后，将added重新清空  
 
                 mHandler.post(new Runnable() {
                     public void run() {
                         final long t = SystemClock.uptimeMillis();
-                        if (callbacks != null) {
+                        if (callbacks != null) {//Launcher实现了Callbacks接口，将获取到的数据回调给Launcher  
                             if (first) {
                                 callbacks.bindAllApplications(added);
                             } else {

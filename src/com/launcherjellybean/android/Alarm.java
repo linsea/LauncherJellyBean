@@ -18,17 +18,21 @@ package com.launcherjellybean.android;
 
 import android.os.Handler;
 
+/**
+ * 
+ * 一个报警器线程,可设置未来某一时间触发, 并可以设置一个监听者,触发时回调监听者
+ */
 public class Alarm implements Runnable{
     // if we reach this time and the alarm hasn't been cancelled, call the listener
-    private long mAlarmTriggerTime;
+    private long mAlarmTriggerTime;//触发报警的未来某一时间点
 
     // if we've scheduled a call to run() (ie called mHandler.postDelayed), this variable is true.
     // We use this to avoid having multiple pending callbacks
-    private boolean mWaitingForCallback;
+    private boolean mWaitingForCallback;//是否已经发出过一个报警调度,即启动了报警计时器,等待通知监听者
 
     private Handler mHandler;
-    private OnAlarmListener mAlarmListener;
-    private boolean mAlarmPending = false;
+    private OnAlarmListener mAlarmListener;//报警时的回调接口
+    private boolean mAlarmPending = false;//此报警器是未决的,不可用吗?
 
     public Alarm() {
         mHandler = new Handler();
@@ -40,7 +44,7 @@ public class Alarm implements Runnable{
 
     // Sets the alarm to go off in a certain number of milliseconds. If the alarm is already set,
     // it's overwritten and only the new alarm setting is used
-    public void setAlarm(long millisecondsInFuture) {
+    public void setAlarm(long millisecondsInFuture) {//设置多少毫秒后报警
         long currentTime = System.currentTimeMillis();
         mAlarmPending = true;
         mAlarmTriggerTime = currentTime + millisecondsInFuture;
@@ -60,9 +64,9 @@ public class Alarm implements Runnable{
         mWaitingForCallback = false;
         if (mAlarmTriggerTime != 0) {
             long currentTime = System.currentTimeMillis();
-            if (mAlarmTriggerTime > currentTime) {
+            if (mAlarmTriggerTime > currentTime) {//可能由于某些原因而调度提前,这里再次检查并重设
                 // We still need to wait some time to trigger spring loaded mode--
-                // post a new callback
+                // post a new callback 
                 mHandler.postDelayed(this, Math.max(0, mAlarmTriggerTime - currentTime));
                 mWaitingForCallback = true;
             } else {

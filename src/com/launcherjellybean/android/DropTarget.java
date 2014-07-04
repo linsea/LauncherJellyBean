@@ -22,6 +22,8 @@ import android.graphics.Rect;
 import android.util.Log;
 
 /**
+ * 可以接收Drop动作的对象的抽象,如Folder,workspace等可以接收drop动作.
+ * 
  * Interface defining an object that can receive a drag.
  *
  */
@@ -29,15 +31,20 @@ public interface DropTarget {
 
     public static final String TAG = "DropTarget";
 
+    /**
+     * 拖动对象,抽象出了拖动相关的信息,如拖动时的悬空视图(DragView), 起始位置,偏移量,拖动发起源(DragSource).
+     * 作为参数传给可以接收drop动作的DropTarget,然后DropTarget从中提取出信息进行相应的处理.
+     * 最主要的处理方法是DropTarget#onDrop(DragObject)
+     */
     class DragObject {
         public int x = -1;
         public int y = -1;
 
         /** X offset from the upper-left corner of the cell to where we touched.  */
-        public int xOffset = -1;
+        public int xOffset = -1;//X轴的拖动的偏移量
 
         /** Y offset from the upper-left corner of the cell to where we touched.  */
-        public int yOffset = -1;
+        public int yOffset = -1;//Y轴的拖动的偏移量
 
         /** This indicates whether a drag is in final stages, either drop or cancel. It
          * differentiates onDragExit, since this is called when the drag is ending, above
@@ -45,13 +52,13 @@ public interface DropTarget {
          */
         public boolean dragComplete = false;
 
-        /** The view that moves around while you drag.  */
+        /** 有一点放大了的拖动视图,拖动时会跟随移动. The view that moves around while you drag.  */
         public DragView dragView = null;
 
         /** The data associated with the object being dragged */
         public Object dragInfo = null;
 
-        /** Where the drag originated */
+        /** 从哪个拖动源发出的拖动, workspace/Folder . Where the drag originated */
         public DragSource dragSource = null;
 
         /** Post drag animation runnable */
@@ -60,7 +67,8 @@ public interface DropTarget {
         /** Indicates that the drag operation was cancelled */
         public boolean cancelled = false;
 
-        /** Defers removing the DragView from the DragLayer until after the drop animation. */
+        /**延迟删除 DragView, 要等drop动作的动画完了之后,才能删除DragView.
+         * Defers removing the DragView from the DragLayer until after the drop animation. */
         public boolean deferDragViewCleanupPostAnimation = true;
 
         public DragObject() {
@@ -68,7 +76,8 @@ public interface DropTarget {
     }
 
     public static class DragEnforcer implements DragController.DragListener {
-        int dragParity = 0;
+        /**一个DragController.DragListener的简单实现,监视Drag的开始与结束,打印Log*/
+    	int dragParity = 0;
 
         public DragEnforcer(Context context) {
             Launcher launcher = (Launcher) context;

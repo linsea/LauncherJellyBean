@@ -27,7 +27,9 @@ import android.os.MessageQueue;
  * Queue of things to run on a looper thread.  Items posted with {@link #post} will not
  * be actually enqued on the handler until after the last one has run, to keep from
  * starving the thread.
- *
+ * 实际是单线程一个接一个地执行发送到这个队列中的Runnable(请注意是直接调用Runnable.run()方法的,
+ * 所以不是多线程异步,而是同步地一个接一个地执行的.),向消息循环队列中发的消息可以理解为信号,最终
+ * 处理的并不是发送到它上面的Message,而是mQueue中的Runnable.
  * This class is fifo.
  */
 public class DeferredHandler {
@@ -50,6 +52,13 @@ public class DeferredHandler {
             }
         }
 
+        /**
+         * Called when the message queue has run out of messages and will now wait for more.
+         *  Return true to keep your idle handler active, false to have it removed. 
+         *  This may be called if there are still messages pending in the queue,
+         *   but they are all scheduled to be dispatched after the current time. 
+         *   //当mQueue中没有消息需要处理时才处理(postIdle调用)这标记为idle中的消息,通常不是紧急重要的消息.
+         */
         public boolean queueIdle() {
             handleMessage(null);
             return false;

@@ -75,32 +75,37 @@ public class DragController {
     /** Whether or not we're dragging. */
     private boolean mDragging;
 
-    /** X coordinate of the down event. */
+    /** 按下事件时点的X坐标. coordinate of the down event. */
     private int mMotionDownX;
 
-    /** Y coordinate of the down event. */
+    /** 按下事件时点的Y坐标.Y coordinate of the down event. */
     private int mMotionDownY;
 
-    /** the area at the edge of the screen that makes the workspace go left
+    /** 距离左右边缘可以滚动的宽度,单位(像素)
+     * the area at the edge of the screen that makes the workspace go left
      *   or right while you're dragging.
      */
     private int mScrollZone;
 
+    /**Drag动作相关信息的封装*/
     private DropTarget.DragObject mDragObject;
 
     /** Who can receive drop events */
     private ArrayList<DropTarget> mDropTargets = new ArrayList<DropTarget>();
     private ArrayList<DragListener> mListeners = new ArrayList<DragListener>();
+    /**接收拖放删除的目标对象*/
     private DropTarget mFlingToDeleteDropTarget;
 
     /** The window token used as the parent for the DragView. */
     private IBinder mWindowToken;
 
-    /** The view that will be scrolled when dragging to the left and right edges of the screen. */
+    /** The view that will be scrolled when dragging to the left and right edges of the screen. 
+     * 拖动到边缘时会滚动的视图, 即DragLayer层*/
     private View mScrollView;
 
     private View mMoveTarget;
 
+    /**实际上是workspace*/
     private DragScroller mDragScroller;
     private int mScrollState = SCROLL_OUTSIDE_ZONE;
     private ScrollRunnable mScrollRunnable = new ScrollRunnable();
@@ -229,8 +234,12 @@ public class DragController {
         final int dragRegionLeft = dragRegion == null ? 0 : dragRegion.left;
         final int dragRegionTop = dragRegion == null ? 0 : dragRegion.top;
 
+        //设置mDragging=true，表示拖拽已经开始  
+        //在DragLayer的onInterceptTouchEvent()中根据这个值判断是否拦截MotionEvent
         mDragging = true;
 
+        //实例化DragObject，表示拖拽信息封装对象  
+        //封装了拖拽对象的信息  
         mDragObject = new DropTarget.DragObject();
 
         mDragObject.dragComplete = false;
@@ -250,7 +259,7 @@ public class DragController {
         if (dragRegion != null) {
             dragView.setDragRegion(new Rect(dragRegion));
         }
-
+        //将拖拽的图标显示在DragLayer中 
         dragView.show(mMotionDownX, mMotionDownY);
         handleMoveEvent(mMotionDownX, mMotionDownY);
     }
@@ -357,14 +366,14 @@ public class DragController {
             if (mDragObject.dragView != null) {
                 isDeferred = mDragObject.deferDragViewCleanupPostAnimation;
                 if (!isDeferred) {
-                    mDragObject.dragView.remove();
+                    mDragObject.dragView.remove();//不需要DragView了，将其删除  
                 }
                 mDragObject.dragView = null;
             }
 
             // Only end the drag if we are not deferred
             if (!isDeferred) {
-                for (DragListener listener : mListeners) {
+                for (DragListener listener : mListeners) {//调用回调方法，通知拖拽结束。  
                     listener.onDragEnd();
                 }
             }
@@ -449,7 +458,7 @@ public class DragController {
                         drop(dragLayerX, dragLayerY);
                     }
                 }
-                endDrag();
+                endDrag();//结束拖拽过程
                 break;
             case MotionEvent.ACTION_CANCEL:
                 cancelDrag();
@@ -480,11 +489,21 @@ public class DragController {
         }
     }
 
+    /**
+     * 主要处理拖拽过程中需要处理的事务。
+     * 包括：1、在更新图标在屏幕中的位置，并刷新UI。
+     * 2、判断图标当前所处的位置。包括SCROLL_OUTSIDE_ZONE和SCROLL_WAITING_IN_ZONE，
+     * 对处于SCROLL_WAITING_IN_ZONE位置时，需要根据具体的位置，向前或向后切换显示的屏幕。
+     * 再回到上面假设的情况中。则此时只是简单的刷新了位置信息，并重新绘制图标。
+     * @param x
+     * @param y
+     */
     private void handleMoveEvent(int x, int y) {
-        mDragObject.dragView.move(x, y);
+        mDragObject.dragView.move(x, y);//更新在DragLayer中的位置  
 
         // Drop on someone?
         final int[] coordinates = mCoordinatesTemp;
+        //根据当前的位置寻找DropTarget对象来放置图标  
         DropTarget dropTarget = findDropTarget(x, y, coordinates);
         mDragObject.x = coordinates[0];
         mDragObject.y = coordinates[1];
@@ -496,9 +515,9 @@ public class DragController {
 
             if (mLastDropTarget != dropTarget) {
                 if (mLastDropTarget != null) {
-                    mLastDropTarget.onDragExit(mDragObject);
+                    mLastDropTarget.onDragExit(mDragObject);//从最后一次记录的DropTarget中退出  
                 }
-                dropTarget.onDragEnter(mDragObject);
+                dropTarget.onDragEnter(mDragObject);//进入到当前寻找到的DropTarget 
             }
             dropTarget.onDragOver(mDragObject);
         } else {
@@ -517,6 +536,8 @@ public class DragController {
         mLastTouch[1] = y;
         final int delay = mDistanceSinceScroll < slop ? RESCROLL_DELAY : SCROLL_DELAY;
 
+        //判断当前拖拽的图标是否处于ScrollZone即滑动区域。  
+        //并且根据在哪个一个ScrollZone来处理屏幕滑动的方向。
         if (x < mScrollZone) {
             if (mScrollState == SCROLL_OUTSIDE_ZONE) {
                 mScrollState = SCROLL_WAITING_IN_ZONE;
@@ -567,7 +588,9 @@ public class DragController {
             // Remember where the motion event started
             mMotionDownX = dragLayerX;
             mMotionDownY = dragLayerY;
-
+            
+            //判断当前的触点是否处于屏幕边缘的ScrollZone，当处于这个区域时  
+            //状态mScrollState将转变为SCROLL,并且在一定时间的停留之后，屏幕滑动到另一屏。 
             if ((dragLayerX < mScrollZone) || (dragLayerX > mScrollView.getWidth() - mScrollZone)) {
                 mScrollState = SCROLL_WAITING_IN_ZONE;
                 mHandler.postDelayed(mScrollRunnable, SCROLL_DELAY);
@@ -576,19 +599,19 @@ public class DragController {
             }
             break;
         case MotionEvent.ACTION_MOVE:
-            handleMoveEvent(dragLayerX, dragLayerY);
+            handleMoveEvent(dragLayerX, dragLayerY);//调用handleMoveEvent()处理图标移动  
             break;
         case MotionEvent.ACTION_UP:
             // Ensure that we've processed a move event at the current pointer location.
             handleMoveEvent(dragLayerX, dragLayerY);
-            mHandler.removeCallbacks(mScrollRunnable);
+            mHandler.removeCallbacks(mScrollRunnable);//取消可能存放在消息队列中的滑动任务
 
             if (mDragging) {
                 PointF vec = isFlingingToDelete(mDragObject.dragSource);
                 if (vec != null) {
                     dropOnFlingToDeleteTarget(dragLayerX, dragLayerY, vec);
                 } else {
-                    drop(dragLayerX, dragLayerY);
+                    drop(dragLayerX, dragLayerY);//根据目前相对DragLayer的坐标，将图标“降落”到指定的DropTarget上
                 }
             }
             endDrag();
@@ -658,6 +681,7 @@ public class DragController {
 
     private void drop(float x, float y) {
         final int[] coordinates = mCoordinatesTemp;
+        //根据当前的坐标查找适合的DropTarget对象 
         final DropTarget dropTarget = findDropTarget((int) x, (int) y, coordinates);
 
         mDragObject.x = coordinates[0];
@@ -667,6 +691,7 @@ public class DragController {
             mDragObject.dragComplete = true;
             dropTarget.onDragExit(mDragObject);
             if (dropTarget.acceptDrop(mDragObject)) {
+            	//将拖拽的对象放置到指定的DropTarget对象中。  
                 dropTarget.onDrop(mDragObject);
                 accepted = true;
             }
@@ -709,6 +734,10 @@ public class DragController {
         return null;
     }
 
+    /**
+     * 
+     * @param scroller实际上是workspace
+     */
     public void setDragScoller(DragScroller scroller) {
         mDragScroller = scroller;
     }
