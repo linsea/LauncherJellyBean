@@ -964,7 +964,7 @@ public final class Launcher extends Activity
      * @param data The intent describing the application.
      * @param cellInfo The position on screen where to create the shortcut.
      */
-    void completeAddApplication(Intent data, long container, int screen, int cellX, int cellY) {
+    public void completeAddApplication(Intent data, long container, int screen, int cellX, int cellY) {
         final int[] cellXY = mTmpAddItemCellCoordinates;
         final CellLayout layout = getCellLayout(container, screen);
 

@@ -38,6 +38,8 @@ import com.launcherjellybean.android.R;
 import java.util.ArrayList;
 
 /**
+ * 处理拖放的Controller, 既然是MVC中的C,那么肯定有M和V,所以与之关联的类(成员变量)
+ * 应该有:Launcher,它主要是
  * Class for initiating a drag within a view or across multiple views.
  */
 public class DragController {

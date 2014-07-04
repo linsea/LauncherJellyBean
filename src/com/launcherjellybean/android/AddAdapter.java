@@ -31,7 +31,7 @@ import com.launcherjellybean.android.R;
 
 /**
  * Adapter showing the types of items that can be added to a {@link Workspace}.
- * 可以被添加进Workspace的Item的类型的Adapter
+ * 可以被添加进Workspace的Item的类型的Adapter.这个类项目上没有使用.
  */
 public class AddAdapter extends BaseAdapter {
 
