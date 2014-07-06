@@ -46,7 +46,10 @@ import com.launcherjellybean.android.R;
 import java.util.ArrayList;
 
 /**
- * A ViewGroup that coordinates dragging across its descendants
+ * DragLayer表示一个可以拖动的FrameLayout. 
+ * 它里面最重要的几个成员变量是:DragController,Launcher,DragView.
+ * 
+ * A ViewGroup that coordinates dragging across its descendants.
  */
 public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChangeListener {
     private DragController mDragController;
@@ -375,6 +378,8 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         }
     }
 
+    //当系统要对这个View进行布局时（即要分配个大小和位置给它及其所有子View）就会调用这个方法，
+    //子类应该重写此方法，并且在它所有子视图（如果有）上调用layout方法。
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
         int count = getChildCount();
@@ -738,7 +743,10 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         invalidate();
     }
 
-    @Override
+    
+    @Override //当视图自己绘制完了，准备绘制它的子视图时，则调用此方法。
+    //子类在这个时机可以进行一些自己的控制操作。
+    //比如这里，当进入左右边缘区域时，它就把一个图片绘制到了canvas上。
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
 

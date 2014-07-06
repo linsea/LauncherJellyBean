@@ -67,6 +67,8 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
+ * 最重要的几个变量:3个CellLayout,Launcher,DragController,FolderIcon
+ * 
  * The workspace is a wide area with a wallpaper and a finite number of pages.
  * Each page contains a number of icons, folders or widgets the user can
  * interact with. A workspace is meant to be used with a fixed width only.
@@ -109,6 +111,7 @@ public class Workspace extends SmoothPagedView
     private int mDefaultPage;
 
     /**
+     * 当前正在被拖的CellInfo.
      * CellInfo for the cell that is currently being dragged
      */
     private CellLayout.CellInfo mDragInfo;

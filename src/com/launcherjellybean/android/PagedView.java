@@ -1551,7 +1551,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             if (mNextPage < getChildCount() -1) snapToPage(mNextPage + 1);
         }
     }
-
+    
+    /**返回这个View所在的Page的index(并不是页号)*/
     public int getPageForView(View v) {
         int result = -1;
         if (v != null) {
@@ -1629,18 +1630,18 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                     Page layout = (Page) getPageAt(i);//说明PagedView的子视图只能是Page
                     if ((i < lowerPageBound) || (i > upperPageBound)) {
                         if (layout.getPageChildCount() > 0) {
-                            layout.removeAllViewsOnPage();
+                            layout.removeAllViewsOnPage();//本页及左右两边页，这3页之外的页都清除视图
                         }
                         mDirtyPageContent.set(i, true);
                     }
                 }
                 // Next, load any new pages
                 for (int i = 0; i < count; ++i) {
-                    if ((i != page) && immediateAndOnly) {
+                    if ((i != page) && immediateAndOnly) {//如果只立即加载page页,则遇到其他页时跳过
                         continue;
                     }
-                    if (lowerPageBound <= i && i <= upperPageBound) {
-                        if (mDirtyPageContent.get(i)) {
+                    if (lowerPageBound <= i && i <= upperPageBound) {//对于page及其左右的这三页
+                        if (mDirtyPageContent.get(i)) {//如果数据脏了,则刷新同步数据
                             syncPageItems(i, (i == page) && immediateAndOnly);
                             mDirtyPageContent.set(i, false);
                         }

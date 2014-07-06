@@ -340,6 +340,7 @@ public class LauncherModel extends BroadcastReceiver {
     }
 
     /**
+     * 从数据库中查询出所有的ItemInfo,但ItemInfo.id为空，并没有设值。
      * Returns an ItemInfo array containing all the items in the LauncherModel.
      * The ItemInfo.id is not set through this function.
      */

@@ -39,7 +39,22 @@ import java.util.ArrayList;
 
 /**
  * 处理拖放的Controller, 既然是MVC中的C,那么肯定有M和V,所以与之关联的类(成员变量)
- * 应该有:Launcher,它主要是
+ * 应该有:
+ * Launcher,它是最上面的展示层,逻辑变化最后要体现在它上面,给人看到变化,所以
+ * 它是View层(其实是它里面的DragLayer视图层,它是通过Launcher.getDragLayer()间接得到的.)
+ * 
+ * DropTarget.DragObject,它是Drag动作的封装对象,它里面包含了拖动源,被拖动的对象.它们类似
+ * 于MVC中的M, 这些模型封装了与这个拖动动作相关的数据对象.
+ * 
+ * ArrayList<DropTarget>,潜在的可能并且可以接收Drop动作的对象们.
+ * 
+ * DragScroller, 实际上是workspace,拖动时可能进入边缘的滚动区域,此时workspace左或右滑动.
+ * 所以也与workspace也关联进来了.
+ * 
+ * mScrollView, 实际上是DragLayer,拖动进入边缘时也要滚动.
+ * 
+ * 总之想想一个拖动与哪些要素相关,就需要把它作为成员变量包含进来.
+ * 
  * Class for initiating a drag within a view or across multiple views.
  */
 public class DragController {
@@ -51,11 +66,11 @@ public class DragController {
     /** Indicates the drag is a copy.  */
     public static int DRAG_ACTION_COPY = 1;
 
-    private static final int SCROLL_DELAY = 500;
-    private static final int RESCROLL_DELAY = 750;
+    private static final int SCROLL_DELAY = 500;//拖到边缘第一次滑动的延迟时间
+    private static final int RESCROLL_DELAY = 750;//拖到边缘不动,再次滑动时的延迟时间
     private static final int VIBRATE_DURATION = 15;
 
-    private static final boolean PROFILE_DRAWING_DURING_DRAG = false;
+    private static final boolean PROFILE_DRAWING_DURING_DRAG = false;//调试用的变量
 
     private static final int SCROLL_OUTSIDE_ZONE = 0;
     private static final int SCROLL_WAITING_IN_ZONE = 1;
@@ -83,7 +98,7 @@ public class DragController {
     /** 按下事件时点的Y坐标.Y coordinate of the down event. */
     private int mMotionDownY;
 
-    /** 距离左右边缘可以滚动的宽度,单位(像素)
+    /** 距离左/右边缘可以滚动的宽度,单位(dp)
      * the area at the edge of the screen that makes the workspace go left
      *   or right while you're dragging.
      */
@@ -102,7 +117,7 @@ public class DragController {
     private IBinder mWindowToken;
 
     /** The view that will be scrolled when dragging to the left and right edges of the screen. 
-     * 拖动到边缘时会滚动的视图, 即DragLayer层*/
+     * 拖动到边缘时会滚动的视图, 即DragLayer层,进入边缘时DragLayer层也要相应地滚动,不仅仅是workspace滑动.*/
     private View mScrollView;
 
     private View mMoveTarget;
@@ -112,7 +127,7 @@ public class DragController {
     private int mScrollState = SCROLL_OUTSIDE_ZONE;
     private ScrollRunnable mScrollRunnable = new ScrollRunnable();
 
-    private DropTarget mLastDropTarget;
+    private DropTarget mLastDropTarget;//最后接收Drop动作的目标对象
 
     private InputMethodManager mInputMethodManager;
 
@@ -161,7 +176,7 @@ public class DragController {
         mVibrator = (Vibrator) launcher.getSystemService(Context.VIBRATOR_SERVICE);
 
         float density = r.getDisplayMetrics().density;
-        mFlingToDeleteThresholdVelocity =
+        mFlingToDeleteThresholdVelocity = //为什么是负数???
                 (int) (r.getInteger(R.integer.config_flingToDeleteMinVelocity) * density);
     }
 
@@ -180,6 +195,7 @@ public class DragController {
      *        {@link #DRAG_ACTION_COPY}
      * @param dragRegion Coordinates within the bitmap b for the position of item being dragged.
      *          Makes dragging feel more precise, e.g. you can clip out a transparent border
+     * @param initialDragViewScale 图标View的Bitmap的放大因子,即放大了几倍.
      */
     public void startDrag(View v, Bitmap bmp, DragSource source, Object dragInfo, int dragAction,
             Rect dragRegion, float initialDragViewScale) {
@@ -250,8 +266,9 @@ public class DragController {
         mDragObject.dragSource = source;
         mDragObject.dragInfo = dragInfo;
 
-        mVibrator.vibrate(VIBRATE_DURATION);
-
+        mVibrator.vibrate(VIBRATE_DURATION);//开始拖动时,振动一下.
+        
+        //开始画被拖动对象的一个外部轮廓
         final DragView dragView = mDragObject.dragView = new DragView(mLauncher, b, registrationX,
                 registrationY, 0, 0, b.getWidth(), b.getHeight(), initialDragViewScale);
 
@@ -263,7 +280,7 @@ public class DragController {
         }
         //将拖拽的图标显示在DragLayer中 
         dragView.show(mMotionDownX, mMotionDownY);
-        handleMoveEvent(mMotionDownX, mMotionDownY);
+        handleMoveEvent(mMotionDownX, mMotionDownY);//转到处理移动事件
     }
 
     /**
@@ -423,6 +440,7 @@ public class DragController {
     }
 
     /**
+     * 从发起Drag动作的源层(DragLayer层)调用这个方法.
      * Call this from a drag source view.
      */
     public boolean onInterceptTouchEvent(MotionEvent ev) {
@@ -570,7 +588,9 @@ public class DragController {
     }
 
     /**
-     * Call this from a drag source view.
+     * 从发起Drag动作的源层(DragLayer层)调用这个方法.
+     * 
+     * Call this from a drag source view. 
      */
     public boolean onTouchEvent(MotionEvent ev) {
         if (!mDragging) {
@@ -749,7 +769,7 @@ public class DragController {
     }
 
     /**
-     * Sets the drag listner which will be notified when a drag starts or ends.
+     * Sets the drag listener which will be notified when a drag starts or ends.
      */
     public void addDragListener(DragListener l) {
         mListeners.add(l);
@@ -821,14 +841,14 @@ public class DragController {
                 } else {
                     mDragScroller.scrollRight();
                 }
-                mScrollState = SCROLL_OUTSIDE_ZONE;
+                mScrollState = SCROLL_OUTSIDE_ZONE;//到滚动区域之外了
                 mDistanceSinceScroll = 0;
                 mDragScroller.onExitScrollArea();
                 mLauncher.getDragLayer().onExitScrollArea();
 
-                if (isDragging()) {
+                if (isDragging()) {//如果还没有放手
                     // Force an update so that we can requeue the scroller if necessary
-                    forceMoveEvent();
+                    forceMoveEvent();//重新进入Move的过程中,可能会在边缘,可能连续滑动到下页
                 }
             }
         }

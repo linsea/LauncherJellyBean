@@ -243,7 +243,7 @@ public final class Launcher extends Activity
 
     private LauncherModel mModel;
     private IconCache mIconCache;
-    private boolean mUserPresent = true;
+    private boolean mUserPresent = true;//用户是否在，手机是否处理使用中，屏幕是不是亮的。
     private boolean mVisible = false;
     private boolean mAttached = false;
 
@@ -964,7 +964,7 @@ public final class Launcher extends Activity
      * @param data The intent describing the application.
      * @param cellInfo The position on screen where to create the shortcut.
      */
-    public void completeAddApplication(Intent data, long container, int screen, int cellX, int cellY) {
+    void completeAddApplication(Intent data, long container, int screen, int cellX, int cellY) {
         final int[] cellXY = mTmpAddItemCellCoordinates;
         final CellLayout layout = getCellLayout(container, screen);
 
@@ -991,6 +991,7 @@ public final class Launcher extends Activity
     }
 
     /**
+     * 用手指添加快捷方式到桌面
      * Add a shortcut to the workspace.
      *
      * @param data The intent describing the shortcut.

@@ -52,7 +52,7 @@ public interface DropTarget {
          */
         public boolean dragComplete = false;
 
-        /** 有一点放大了的拖动视图,拖动时会跟随移动. The view that moves around while you drag.  */
+        /** 有放大了一点的拖动视图,拖动时会跟随移动. The view that moves around while you drag.  */
         public DragView dragView = null;
 
         /** The data associated with the object being dragged */
@@ -186,6 +186,7 @@ public interface DropTarget {
     boolean acceptDrop(DragObject dragObject);
 
     // These methods are implemented in Views
+    /**设置可以接收Drop动作的矩形区域*/
     void getHitRect(Rect outRect);
     void getLocationInDragLayer(int[] loc);
     int getLeft();

@@ -44,6 +44,7 @@ public class LauncherApplication extends Application {
         super.onCreate();
 
         // set sIsScreenXLarge and sScreenDensity *before* creating icon cache
+        //根据定义在不同文件夹里的同名变量来区别不同的屏幕尺寸，这是一个技巧。
         sIsScreenLarge = getResources().getBoolean(R.bool.is_large_screen);
         sScreenDensity = getResources().getDisplayMetrics().density;
 
