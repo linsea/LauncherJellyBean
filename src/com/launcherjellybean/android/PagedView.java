@@ -110,7 +110,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     protected final static int TOUCH_STATE_NEXT_PAGE = 3;
     protected final static float ALPHA_QUANTIZE_LEVEL = 0.0001f;
 
-    protected int mTouchState = TOUCH_STATE_REST;
+    protected int mTouchState = TOUCH_STATE_REST;//当前的触摸状态
     protected boolean mForceScreenScrolled = false;
 
     protected OnLongClickListener mLongClickListener;
@@ -947,6 +947,9 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
          * state and he is moving his finger.  We want to intercept this
          * motion.
          */
+        //最常见的case:用户处于拖动状态且手指正在移动,这是我们需要拦截的动作.
+        //最常见的需要拦截的情况：用户已经进入滑动状态，并且正在滑动手指。 
+        //对这种情况直接进行拦截，返回true以执行onTouchEvent()继续执行滑动操作。 
         final int action = ev.getAction();
         if ((action == MotionEvent.ACTION_MOVE) &&
                 (mTouchState == TOUCH_STATE_SCROLLING)) {
@@ -959,6 +962,13 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                  * mIsBeingDragged == false, otherwise the shortcut would have caught it. Check
                  * whether the user has moved far enough from his original down touch.
                  */
+            	 /** 
+            	  * 当在这里接受到ACTION_MOVE时，说明mTouchState!=TOUCH_STATE_SCROLLING并且mIsBeingDragged的值应该为false， 
+            	  * 否则DragLayer就应该截获了MotionEvent用于实现拖拽。 
+            	  * 此时还没有进入滑动状态，当mActivePointerId == INVALID_POINTER时，也就是在此之前没有接收到任何touch事件。 
+            	  * 这种情况发生在Workspace变小时，也就是之前Workspace处于SPRING_LOADED状态。当出现这种情况时直接把当前的事件当作ACTION_DOWN进行处理。 
+            	  * 反之，则通过determineScrollingStart()尝试能够进入滑动状态。 
+            	  */  
                 if (mActivePointerId != INVALID_POINTER) {
                     determineScrollingStart(ev);
                     break;
@@ -977,15 +987,25 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                 mDownMotionX = x;
                 mLastMotionX = x;
                 mLastMotionY = y;
+                
+                //因为在ScrollBy时只能使用int，而记录的x和y都是float，会产生误差，
+                //故这里用mLastMotionXRemainder记录余数用于消除误差  
                 mLastMotionXRemainder = 0;
-                mTotalMotionX = 0;
+                mTotalMotionX = 0;//x方向上的总位移  
                 mActivePointerId = ev.getPointerId(0);
+                
+                
+                //设置mAllowLongPress=true，允许LongClick事件发生。LongClick事件定义在Launcher中  
+                //处理的内容包括启动对shortcut的拖拽或弹出壁纸选择的对话框，若mAllowLongPress=false，  
+                //则不会响应以上事件。  
                 mAllowLongPress = true;
 
                 /*
                  * If being flinged and user touches the screen, initiate drag;
                  * otherwise don't.  mScroller.isFinished should be false when
                  * being flinged.
+                 * 当屏幕处于flinged状态（快速滑动）时，若此时用户触摸了屏幕，需要使滑动停止。 
+                 * 并且初始化拖拽的条件 
                  */
                 final int xDist = Math.abs(mScroller.getFinalX() - mScroller.getCurrX());
                 final boolean finishedScrolling = (mScroller.isFinished() || xDist < mTouchSlop);
@@ -1027,6 +1047,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         /*
          * The only time we want to intercept motion events is if we are in the
          * drag mode.
+         * 只有进入了滑动状态，才进行拦截，进入onTouchEvent执行滑动操作。当mTouchState != TOUCH_STATE_REST 
+         * 时，就说明没有进入滑动状态。 
          */
         return mTouchState != TOUCH_STATE_REST;
     }
@@ -1345,6 +1367,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         return super.onGenericMotionEvent(event);
     }
 
+    /**获取速度跟踪器，记录各个时刻的速度。并且添加当前的MotionEvent以记录更新速度值。*/  
     private void acquireVelocityTrackerAndAddMovement(MotionEvent ev) {
         if (mVelocityTracker == null) {
             mVelocityTracker = VelocityTracker.obtain();
