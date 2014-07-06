@@ -1047,8 +1047,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         /*
          * The only time we want to intercept motion events is if we are in the
          * drag mode.
-         * 只有进入了滑动状态，才进行拦截，进入onTouchEvent执行滑动操作。当mTouchState != TOUCH_STATE_REST 
-         * 时，就说明没有进入滑动状态。 
+         * 只有进入了滑动状态，才进行拦截，进入onTouchEvent执行滑动操作。
+         * 当mTouchState != TOUCH_STATE_REST时，就说明没有进入滑动状态。 
          */
         return mTouchState != TOUCH_STATE_REST;
     }
