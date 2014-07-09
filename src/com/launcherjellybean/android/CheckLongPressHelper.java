@@ -17,19 +17,21 @@
 package com.launcherjellybean.android;
 
 import android.view.View;
-
+/**检查长按事件的辅助类.
+ * 传入一个View,然后就可以帮助检查这个View有没有被长按事件监听器处理过.*/
 public class CheckLongPressHelper {
-    private View mView;
-    private boolean mHasPerformedLongPress;
+    private View mView;//被长按的视图
+    private boolean mHasPerformedLongPress;//是否已处理了长按事件
     private CheckForLongPress mPendingCheckForLongPress;
 
+    /**检查视图是否已处理长按事件的Runnable*/
     class CheckForLongPress implements Runnable {
         public void run() {
-            if ((mView.getParent() != null) && mView.hasWindowFocus()
+            if ((mView.getParent() != null) && mView.hasWindowFocus()//为什么要这个条件?
                     && !mHasPerformedLongPress) {
                 if (mView.performLongClick()) {
-                    mView.setPressed(false);
-                    mHasPerformedLongPress = true;
+                    mView.setPressed(false);//设置视图内部的按下状态
+                    mHasPerformedLongPress = true;//返回检查结果
                 }
             }
         }
@@ -45,9 +47,12 @@ public class CheckLongPressHelper {
         if (mPendingCheckForLongPress == null) {
             mPendingCheckForLongPress = new CheckForLongPress();
         }
+        //要等长按事件的时间过期之后,调用长按事件的listener或context menu处理方法,
+        //看它们是否能处理这个事件
         mView.postDelayed(mPendingCheckForLongPress, LauncherApplication.getLongPressTimeout());
     }
 
+    /**取消检查长按事件的Runnable任务*/
     public void cancelLongPress() {
         mHasPerformedLongPress = false;
         if (mPendingCheckForLongPress != null) {

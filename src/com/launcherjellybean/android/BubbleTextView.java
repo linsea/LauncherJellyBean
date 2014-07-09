@@ -29,6 +29,8 @@ import android.view.MotionEvent;
 import android.widget.TextView;
 
 /**
+ * 表示桌面上应用的图标和文字. 特别注意:TextView是可以设置上下左右的Drawable的,即在TextView
+ * 的Text的上下左右设置一个图片.具体参考TextView的属性.
  * TextView that draws a bubble behind the text. We cannot use a LineBackgroundSpan
  * because we want to make the bubble taller than the text and TextView's clip is
  * too aggressive.

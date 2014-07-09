@@ -74,8 +74,8 @@ final class Utilities {
         int sourceHeight = icon.getHeight();
         if (sourceWidth > textureWidth && sourceHeight > textureHeight) {
             // Icon is bigger than it should be; clip it (solves the GB->ICS migration case)
-            return Bitmap.createBitmap(icon,
-                    (sourceWidth - textureWidth) / 2,
+            return Bitmap.createBitmap(icon,//把原始图标裁剪得小一点
+                    (sourceWidth - textureWidth) / 2, //注意坐标,即裁剪,边缘,留下最中央的部分
                     (sourceHeight - textureHeight) / 2,
                     textureWidth, textureHeight);
         } else if (sourceWidth == textureWidth && sourceHeight == textureHeight) {
@@ -100,9 +100,9 @@ final class Utilities {
             int width = sIconWidth;
             int height = sIconHeight;
 
-            if (icon instanceof PaintDrawable) {
+            if (icon instanceof PaintDrawable) {//PaintDrawable只画边界的Drawable
                 PaintDrawable painter = (PaintDrawable) icon;
-                painter.setIntrinsicWidth(width);
+                painter.setIntrinsicWidth(width);//设置它固有原始的尺寸
                 painter.setIntrinsicHeight(height);
             } else if (icon instanceof BitmapDrawable) {
                 // Ensure the bitmap has a density.
@@ -119,13 +119,15 @@ final class Utilities {
                 if (width < sourceWidth || height < sourceHeight) {
                     // It's too big, scale it down.
                     final float ratio = (float) sourceWidth / sourceHeight;
+                    //使预设值等比例缩小
                     if (sourceWidth > sourceHeight) {
                         height = (int) (width / ratio);
                     } else if (sourceHeight > sourceWidth) {
                         width = (int) (height * ratio);
                     }
+                    //应用图标的宽高都比预设的小
                 } else if (sourceWidth < width && sourceHeight < height) {
-                    // Don't scale up the icon
+                    //不用缩放,就用应用原始的图标的尺寸.Don't scale up the icon
                     width = sourceWidth;
                     height = sourceHeight;
                 }
@@ -135,11 +137,14 @@ final class Utilities {
             int textureWidth = sIconTextureWidth;
             int textureHeight = sIconTextureHeight;
 
+            //这里生成一个新的Bitmap,待画完后作返回值
             final Bitmap bitmap = Bitmap.createBitmap(textureWidth, textureHeight,
                     Bitmap.Config.ARGB_8888);
             final Canvas canvas = sCanvas;
             canvas.setBitmap(bitmap);
 
+            //从这里猜测sIconTextureWidth,sIconTextureHeight
+            //是指应用图标及其质地纹理(阴影?)的宽高度之和吧?
             final int left = (textureWidth-width) / 2;
             final int top = (textureHeight-height) / 2;
 
@@ -154,10 +159,18 @@ final class Utilities {
                 canvas.drawRect(left, top, left+width, top+height, debugPaint);
             }
 
-            sOldBounds.set(icon.getBounds());
-            icon.setBounds(left, top, left+width, top+height);
+            sOldBounds.set(icon.getBounds());//保存icon的边界到sOldBounds
+            
+            //The setBounds(Rect) / setBounds (int left, int top, int right, int bottom) method 
+            //must be called to tell the Drawable where it is drawn and how large it should be.
+            //All Drawables should respect the requested size, often simply by scaling their imagery. 
+            //先设置icon draw时的边界,这些坐标点是指对于将要画的Canvas的坐标,不是icon它自己的坐标!
+            icon.setBounds(left, top, left+width, top+height);//上面计算的工作就是要得到这个边界.
+            												  //因为这个width,height是经过等比例
+            												  //缩放计算后的值,所以不会变形.
+            //开始画了,把icon画到canvas上,可能会缩放的.
             icon.draw(canvas);
-            icon.setBounds(sOldBounds);
+            icon.setBounds(sOldBounds);//还原了icon边界
             canvas.setBitmap(null);
 
             return bitmap;
@@ -237,6 +250,7 @@ final class Utilities {
         final DisplayMetrics metrics = resources.getDisplayMetrics();
         final float density = metrics.density;
 
+        //48dp/64dp/72dp
         sIconWidth = sIconHeight = (int) resources.getDimension(R.dimen.app_icon_size);
         sIconTextureWidth = sIconTextureHeight = sIconWidth;
 
