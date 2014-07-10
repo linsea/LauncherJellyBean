@@ -706,7 +706,7 @@ public class CellLayout extends ViewGroup {
         setTag(cellInfo);
     }
 
-    @Override
+    @Override//对于拦截事件,这里只关注MotionEvent.ACTION_DOWN
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         // First we clear the tag to ensure that on every touch down we start with a fresh slate,
         // even in the case where we return early. Not clearing here was causing bugs whereby on
@@ -717,6 +717,7 @@ public class CellLayout extends ViewGroup {
             clearTagCellInfo();
         }
 
+        //如果设定的监听器mInterceptTouchListener已经处理了事件,则直接认为拦截了.
         if (mInterceptTouchListener != null && mInterceptTouchListener.onTouch(this, ev)) {
             return true;
         }
