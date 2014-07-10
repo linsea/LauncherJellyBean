@@ -31,6 +31,7 @@ import android.graphics.drawable.Drawable;
 import java.util.HashMap;
 
 /**
+ * 通过HashMap来能被的图标和名称的缓存.根据ComponentName来获取.
  * Cache of application icons.  Icons can be made from any thread.
  */
 public class IconCache {
@@ -68,6 +69,7 @@ public class IconCache {
                 android.R.mipmap.sym_def_app_icon);
     }
 
+    /**根据资源ID获取图标,系统根据屏幕密度会缩放图标*/
     public Drawable getFullResIcon(Resources resources, int iconId) {
         Drawable d;
         try {
@@ -108,6 +110,7 @@ public class IconCache {
             resources = null;
         }
         if (resources != null) {
+            //从ActivityInfo中获取应用(Component的)图标资源ID
             int iconId = info.getIconResource();
             if (iconId != 0) {
                 return getFullResIcon(resources, iconId);
@@ -123,7 +126,7 @@ public class IconCache {
                 Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(b);
         d.setBounds(0, 0, b.getWidth(), b.getHeight());
-        d.draw(c);
+        d.draw(c);//Drawable把自己Draw到Canvas的指定位置(通过上面一行的setBounds设置位置)上.
         c.setBitmap(null);
         return b;
     }
@@ -147,6 +150,7 @@ public class IconCache {
     }
 
     /**
+     * 往application中填充应用图标和名称信息.
      * Fill in "application" with the icon and label for "info."
      */
     public void getTitleAndIcon(ApplicationInfo application, ResolveInfo info,
@@ -189,6 +193,8 @@ public class IconCache {
         return mDefaultIcon == icon;
     }
 
+    /**根据ComponentName从Cache中获取应用的图标和名称,
+     * 如果Cache中没有,则查找出应用的图标和名称信息并把它加入到Cache中(也把相关信息加入到labelCache中).*/
     private CacheEntry cacheLocked(ComponentName componentName, ResolveInfo info,
             HashMap<Object, CharSequence> labelCache) {
         CacheEntry entry = mCache.get(componentName);
@@ -201,7 +207,7 @@ public class IconCache {
             if (labelCache != null && labelCache.containsKey(key)) {
                 entry.title = labelCache.get(key).toString();
             } else {
-                entry.title = info.loadLabel(mPackageManager).toString();
+                entry.title = info.loadLabel(mPackageManager).toString();//获取应用名称
                 if (labelCache != null) {
                     labelCache.put(key, entry.title);
                 }
@@ -216,6 +222,7 @@ public class IconCache {
         return entry;
     }
 
+    /**返回一个Cache的影子拷贝*/
     public HashMap<ComponentName,Bitmap> getAllIcons() {
         synchronized (mCache) {
             HashMap<ComponentName,Bitmap> set = new HashMap<ComponentName,Bitmap>();
