@@ -73,7 +73,7 @@ public class CellLayout extends ViewGroup {
     private boolean mScrollingTransformsDirty = false;
 
     private final Rect mRect = new Rect();
-    private final CellInfo mCellInfo = new CellInfo();
+    private final CellInfo mCellInfo = new CellInfo();//表示在CellLayout上长按的某个空的格子
 
     // These are temporary variables to prevent having to allocate a new object just to
     // return an (x, y) value from helper functions. Do NOT use them to maintain other state.
@@ -81,7 +81,7 @@ public class CellLayout extends ViewGroup {
     private final int[] mTmpPoint = new int[2];
     int[] mTempLocation = new int[2];
 
-    boolean[][] mOccupied;
+    boolean[][] mOccupied;//保存格子是否被占用,如4x4的格子.
     boolean[][] mTmpOccupied;
     private boolean mLastDownOnOccupiedCell = false;
 
@@ -97,15 +97,15 @@ public class CellLayout extends ViewGroup {
     private Drawable mNormalBackground;
     private Drawable mActiveGlowBackground;
     private Drawable mOverScrollForegroundDrawable;
-    private Drawable mOverScrollLeft;
+    private Drawable mOverScrollLeft;//左边滑到顶了再滑时显示的动画图片
     private Drawable mOverScrollRight;
     private Rect mBackgroundRect;
     private Rect mForegroundRect;
     private int mForegroundPadding;
 
     // If we're actively dragging something over this screen, mIsDragOverlapping is true
-    private boolean mIsDragOverlapping = false;
-    private final Point mDragCenter = new Point();
+    private boolean mIsDragOverlapping = false;//手在屏幕上正在拖着东西
+    private final Point mDragCenter = new Point();//拖动时的中心点
 
     // These arrays are used to implement the drag visualization on x-large screens.
     // They are used as circular arrays, indexed by mDragOutlineCurrent.
@@ -2808,16 +2808,19 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         }
     }
 
+    /**整个CellLayout的宽度*/
     public int getDesiredWidth() {
         return getPaddingLeft() + getPaddingRight() + (mCountX * mCellWidth) +
                 (Math.max((mCountX - 1), 0) * mWidthGap);
     }
 
+    /**整个CellLayout的高度*/
     public int getDesiredHeight()  {
         return getPaddingTop() + getPaddingBottom() + (mCountY * mCellHeight) +
                 (Math.max((mCountY - 1), 0) * mHeightGap);
     }
 
+    /**这个坐标的位置是否已经被占用*/
     public boolean isOccupied(int x, int y) {
         if (x < mCountX && y < mCountY) {
             return mOccupied[x][y];
@@ -2841,7 +2844,7 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         return new CellLayout.LayoutParams(p);
     }
 
-    public static class CellLayoutAnimationController extends LayoutAnimationController {
+/*    public static class CellLayoutAnimationController extends LayoutAnimationController {
         public CellLayoutAnimationController(Animation animation, float delay) {
             super(animation, delay);
         }
@@ -2850,30 +2853,31 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         protected long getDelayForView(View view) {
             return (int) (Math.random() * 150);
         }
-    }
+    }*/
 
+    /**指示Item在CellLayout上怎样布局的,布局参数*/
     public static class LayoutParams extends ViewGroup.MarginLayoutParams {
         /**
          * Horizontal location of the item in the grid.
          */
         @ViewDebug.ExportedProperty
-        public int cellX;
+        public int cellX;// 第几列(从0开始计数)
 
         /**
          * Vertical location of the item in the grid.
          */
         @ViewDebug.ExportedProperty
-        public int cellY;
+        public int cellY;//第几行(从0开始计数)
 
         /**
          * Temporary horizontal location of the item in the grid during reorder
          */
-        public int tmpCellX;
+        public int tmpCellX;//重排Item时临时的列值
 
         /**
          * Temporary vertical location of the item in the grid during reorder
          */
-        public int tmpCellY;
+        public int tmpCellY;//重排Item时临时的行值
 
         /**
          * Indicates that the temporary coordinates should be used to layout the items
@@ -2893,6 +2897,7 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         public int cellVSpan;
 
         /**
+         * 是否可自由设置它的X,Y,WIDTH,HEIGHT等参数,或这些参数通过计算得出.
          * Indicates whether the item will set its x, y, width and height parameters freely,
          * or whether these will be computed based on cellX, cellY, cellHSpan and cellVSpan.
          */
@@ -2902,7 +2907,7 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
          * Indicates whether this item can be reordered. Always true except in the case of the
          * the AllApps button.
          */
-        public boolean canReorder = true;
+        public boolean canReorder = true;//Item是否可以重排
 
         // X coordinate of the view in the layout.
         @ViewDebug.ExportedProperty
@@ -2942,14 +2947,16 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         }
 
         public void setup(int cellWidth, int cellHeight, int widthGap, int heightGap) {
-            if (isLockedToGrid) {
+            if (isLockedToGrid) {//通过计算得出参数值
                 final int myCellHSpan = cellHSpan;
                 final int myCellVSpan = cellVSpan;
                 final int myCellX = useTmpCoords ? tmpCellX : cellX;
                 final int myCellY = useTmpCoords ? tmpCellY : cellY;
-
+                
+                //View在计算它的宽度和高度时是不包括它的Margin的!
                 width = myCellHSpan * cellWidth + ((myCellHSpan - 1) * widthGap) -
-                        leftMargin - rightMargin;
+                        leftMargin - rightMargin;//为什么要去掉Margin?
+                //难道此Margin是指View距离格子边缘的距离,而不是距离整个屏幕边缘的Margin??
                 height = myCellVSpan * cellHeight + ((myCellVSpan - 1) * heightGap) -
                         topMargin - bottomMargin;
                 x = (int) (myCellX * (cellWidth + widthGap) + leftMargin);
@@ -3000,6 +3007,8 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
     // 2. When long clicking on an empty cell in a CellLayout, we save information about the
     //    cellX and cellY coordinates and which page was clicked. We then set this as a tag on
     //    the CellLayout that was long clicked
+    //1表示在Workspace上拖动时的那个Cell.
+    //2表示在CellLayout上长按的某个空的格子.
     static final class CellInfo {
         View cell;
         int cellX = -1;

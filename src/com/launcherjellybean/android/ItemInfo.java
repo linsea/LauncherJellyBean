@@ -110,7 +110,8 @@ class ItemInfo {
         container = info.container;
     }
 
-    /** Returns the package name that the intent will resolve to, or an empty string if
+    /** 根据Intent返回PackageName.
+     * Returns the package name that the intent will resolve to, or an empty string if
      *  none exists. */
     static String getPackageName(Intent intent) {
         if (intent != null) {
@@ -147,6 +148,7 @@ class ItemInfo {
         values.put(LauncherSettings.Favorites.CELLY, cellY);
     }
 
+    /**返回表示Bitmap的字节数组,即把Bitmap序列化了*/
     static byte[] flattenBitmap(Bitmap bitmap) {
         // Try go guesstimate how much space the icon will take when serialized
         // to avoid unnecessary allocations/copies during the write.
@@ -163,6 +165,7 @@ class ItemInfo {
         }
     }
 
+    /**把Bitmap序列化为字节数组,写进ContentValues中*/
     static void writeBitmap(ContentValues values, Bitmap bitmap) {
         if (bitmap != null) {
             byte[] data = flattenBitmap(bitmap);

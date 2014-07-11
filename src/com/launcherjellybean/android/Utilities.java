@@ -202,6 +202,7 @@ final class Utilities {
     }
 
     /**
+     * 重新把图标的bitmap格式化为桌面上应有的大小(即大了就缩小,但小了不放大).
      * Returns a Bitmap representing the thumbnail of the specified Bitmap.
      * The size of the thumbnail is defined by the dimension
      * android.R.dimen.launcher_application_icon_size.

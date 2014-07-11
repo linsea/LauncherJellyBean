@@ -45,7 +45,7 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
     }
 
     public void enableHardwareLayers() {
-        setLayerType(LAYER_TYPE_HARDWARE, null);
+        setLayerType(LAYER_TYPE_HARDWARE, null);//TODO:什么是Layer,LayerType?
     }
 
     public void setCellDimensions(int cellWidth, int cellHeight, int widthGap, int heightGap ) {

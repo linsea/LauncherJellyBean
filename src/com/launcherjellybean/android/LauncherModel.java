@@ -60,6 +60,11 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
+ * 全局的Model对象,"Model" of MVC pattern,负责加载数据到内存,同时内存中保存一份数据库中数据的拷贝.
+ * 修改Model数据时,也会同步修改数据库中的数据,使两者数据保持一致性.
+ * 
+ * 此类最重要的逻辑在LoaderTask中,它里面的主要方法是loadWorkspace(),bindWorkspace().
+ * 
  * Maintains in-memory state of the Launcher. It is expected that there should be only one
  * LauncherModel object held in a static. Also provide APIs for updating the database state
  * for the Launcher.

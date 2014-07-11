@@ -575,6 +575,11 @@ public class LauncherProvider extends ContentProvider {
             return true;
         }
 
+        /**
+         * 把数据库中的所有图标按一定的大小都格式化
+         * 为桌面上应有的大小(即大了就缩小,但小了不放大).
+         * @param db
+         */
         private void normalizeIcons(SQLiteDatabase db) {
             Log.d(TAG, "normalizing icons");
 
