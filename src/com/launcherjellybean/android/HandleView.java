@@ -25,7 +25,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.launcherjellybean.android.R;
-
+/**项目中没有使用*/
 public class HandleView extends ImageView {
     private static final int ORIENTATION_HORIZONTAL = 1;
 
@@ -50,7 +50,7 @@ public class HandleView extends ImageView {
         setContentDescription(context.getString(R.string.all_apps_button_label));
     }
 
-    @Override
+    @Override//向指定方向查找下一个可以获取焦点的View
     public View focusSearch(int direction) {
         View newFocus = super.focusSearch(direction);
         if (newFocus == null && !mLauncher.isAllAppsVisible()) {

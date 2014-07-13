@@ -560,6 +560,7 @@ public class CellLayout extends ViewGroup {
         mIsHotseat = isHotseat;
     }
 
+    /**添加入CellLayout中的View实际都加入了mShortcutsAndWidgets*/
     public boolean addViewToCellLayout(View child, int index, int childId, LayoutParams params,
             boolean markCells) {
         final LayoutParams lp = params;
@@ -586,6 +587,7 @@ public class CellLayout extends ViewGroup {
 
             child.setId(childId);
 
+            //添加入CellLayout中的View实际都加入了mShortcutsAndWidgets
             mShortcutsAndWidgets.addView(child, index, lp);
 
             if (markCells) markCellsAsOccupiedForView(child);
@@ -2776,6 +2778,7 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         }
     }
 
+    /**移动一个View,主要操作是标记占用数组*/
     public void onMove(View view, int newCellX, int newCellY, int newSpanX, int newSpanY) {
         markCellsAsUnoccupiedForView(view);
         markCellsForView(newCellX, newCellY, newSpanX, newSpanY, mOccupied, true);
@@ -2795,10 +2798,11 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
     }
     public void markCellsAsUnoccupiedForView(View view, boolean occupied[][]) {
         if (view == null || view.getParent() != mShortcutsAndWidgets) return;
-        LayoutParams lp = (LayoutParams) view.getLayoutParams();
+        LayoutParams lp = (LayoutParams) view.getLayoutParams();//一个View的LayoutParams就暗示了它占用了多大的空间
         markCellsForView(lp.cellX, lp.cellY, lp.cellHSpan, lp.cellVSpan, occupied, false);
     }
 
+    /**标记指定的格子为占用状态,主要是为某个Item标记格子空间*/
     private void markCellsForView(int cellX, int cellY, int spanX, int spanY, boolean[][] occupied,
             boolean value) {
         if (cellX < 0 || cellY < 0) return;
