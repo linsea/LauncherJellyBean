@@ -30,6 +30,8 @@ import android.widget.FrameLayout;
 import com.launcherjellybean.android.R;
 
 /*
+ * 屏幕最上方的Bar,也是一个自定义视图,包含搜索视图,拖放目标视图(包含应用删除,应用信息).
+ * 同一时刻两者只显示其中一个视图.
  * Ths bar will manage the transition between the QSB search bar and the delete drop
  * targets so that each of the individual IconDropTargets don't have to.
  */

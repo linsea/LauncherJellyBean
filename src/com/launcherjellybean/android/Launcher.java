@@ -180,7 +180,7 @@ public final class Launcher extends Activity
 
     /** The different states that Launcher can be in. */
     private enum State { WORKSPACE, APPS_CUSTOMIZE, APPS_CUSTOMIZE_SPRING_LOADED };
-    private State mState = State.WORKSPACE;
+    private State mState = State.WORKSPACE;//程序处于哪个状态,焦点在哪儿
     private AnimatorSet mStateAnimation;
     private AnimatorSet mDividerAnimator;
 

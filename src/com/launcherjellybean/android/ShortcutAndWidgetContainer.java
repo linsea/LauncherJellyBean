@@ -24,6 +24,10 @@ import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
 
+/**套在CellLayout里面的一个ViewGroup,可以把CellLayout看作是一个Compound View
+ * (Compound View都是ViewGroup,具体怎么实现Compound View参考官方文档),
+ * ShortcutAndWidgetContainer是其中的一个View,添加入CellLayout的格子上的View
+ * 实际上添加入ShortcutAndWidgetContainer中了.*/
 public class ShortcutAndWidgetContainer extends ViewGroup {
     static final String TAG = "CellLayoutChildren";
 
@@ -54,13 +58,14 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         mWidthGap = widthGap;
         mHeightGap = heightGap;
     }
-
+    
+    /**返回第x列,第y行的那个格子上的View,也即只要那个View包含了(x,y)这个格子*/
     public View getChildAt(int x, int y) {
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
             CellLayout.LayoutParams lp = (CellLayout.LayoutParams) child.getLayoutParams();
-
+            //(x,y)这个格子在View里面
             if ((lp.cellX <= x) && (x < lp.cellX + lp.cellHSpan) &&
                     (lp.cellY <= y) && (y < lp.cellY + lp.cellVSpan)) {
                 return child;
@@ -69,7 +74,7 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         return null;
     }
 
-    @Override
+    @Override//叫子视图们在Canvas上画出自己
     protected void dispatchDraw(Canvas canvas) {
         @SuppressWarnings("all") // suppress dead code warning
         final boolean debug = false;
@@ -80,10 +85,11 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
             for (int i = getChildCount() - 1; i >= 0; i--) {
                 final View child = getChildAt(i);
                 final CellLayout.LayoutParams lp = (CellLayout.LayoutParams) child.getLayoutParams();
-
+                //这里为了调试看得清楚格子的边缘,画出了边线.
                 canvas.drawRect(lp.x, lp.y, lp.x + lp.width, lp.y + lp.height, p);
             }
         }
+        //在调用父类方法之前加入一些自定义的控制,调试信息.
         super.dispatchDraw(canvas);
     }
 
@@ -96,7 +102,10 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         }
         int widthSpecSize = MeasureSpec.getSize(widthMeasureSpec);
         int heightSpecSize =  MeasureSpec.getSize(heightMeasureSpec);
-        setMeasuredDimension(widthSpecSize, heightSpecSize);
+        
+        //这里只是简单地传入父亲对自己的尺寸限制,然后作为测量自己尺寸的结果,表示遵循父亲尺寸的要求.
+        //因为在measureChild方法里面它同样要求自己的子视图绝对(MeasureSpec.EXACTLY)要遵循自己的尺寸要求,不要超越.
+        setMeasuredDimension(widthSpecSize, heightSpecSize);//在onMeasure方法里面一定要调用这个方法
     }
 
     public void setupLp(CellLayout.LayoutParams lp) {
@@ -112,6 +121,7 @@ public class ShortcutAndWidgetContainer extends ViewGroup {
         int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(lp.width, MeasureSpec.EXACTLY);
         int childheightMeasureSpec = MeasureSpec.makeMeasureSpec(lp.height,
                 MeasureSpec.EXACTLY);
+        //这里只是传入对子视图的尺寸限制,然后叫子视图测量自己的尺寸
         child.measure(childWidthMeasureSpec, childheightMeasureSpec);
     }
 

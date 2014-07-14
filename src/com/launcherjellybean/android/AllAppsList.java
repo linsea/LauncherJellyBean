@@ -28,6 +28,7 @@ import android.content.pm.ResolveInfo;
 
 
 /**
+ * 保存所有应用的列表.
  * Stores the list of all applications for the all apps view.
  */
 class AllAppsList {

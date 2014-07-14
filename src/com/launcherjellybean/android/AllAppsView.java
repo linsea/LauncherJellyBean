@@ -18,7 +18,9 @@ package com.launcherjellybean.android;
 
 import java.util.ArrayList;
 
+/**AllApps页需要实现的接口,里面主要的方法是添加/更新/删除应用*/
 public interface AllAppsView {
+	/**回调接口,或观察者/监听器*/
     public interface Watcher {
         public void zoomed(float zoom);
     }

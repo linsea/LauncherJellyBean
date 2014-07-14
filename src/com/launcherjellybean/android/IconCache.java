@@ -31,7 +31,7 @@ import android.graphics.drawable.Drawable;
 import java.util.HashMap;
 
 /**
- * 通过HashMap来能被的图标和名称的缓存.根据ComponentName来获取.
+ * 通过HashMap来实现图标和名称的缓存.根据ComponentName来获取.
  * Cache of application icons.  Icons can be made from any thread.
  */
 public class IconCache {
@@ -58,6 +58,7 @@ public class IconCache {
 
         mContext = context;
         mPackageManager = context.getPackageManager();
+        //根据系统信息获取最优先的图标的密度,如160dpi,240dpi,320dpi.
         mIconDpi = activityManager.getLauncherLargeIconDensity();
 
         // need to set mIconDpi before getting default icon
