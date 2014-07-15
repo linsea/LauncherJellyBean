@@ -61,7 +61,7 @@ public class BubbleTextView extends TextView {
     private Drawable mBackground;
 
     private boolean mStayPressed;
-    private CheckLongPressHelper mLongPressHelper;
+    private CheckLongPressHelper mLongPressHelper;//检查处理长按事件的辅助对象
 
     public BubbleTextView(Context context) {
         super(context);
@@ -89,9 +89,11 @@ public class BubbleTextView extends TextView {
         setShadowLayer(SHADOW_LARGE_RADIUS, 0.0f, SHADOW_Y_OFFSET, SHADOW_LARGE_COLOUR);
     }
 
+    /**根据传入的ShortcutInfo设置BubbleText的外观(图标和名称)*/
     public void applyFromShortcutInfo(ShortcutInfo info, IconCache iconCache) {
         Bitmap b = info.getIcon(iconCache);
 
+        //在TextView的text的上方设置一个图标,即快捷方式的图标
         setCompoundDrawablesWithIntrinsicBounds(null,
                 new FastBitmapDrawable(b),
                 null, null);
@@ -99,7 +101,7 @@ public class BubbleTextView extends TextView {
         setTag(info);
     }
 
-    @Override
+    @Override//Assign a size and position to this view. This is called from layout.
     protected boolean setFrame(int left, int top, int right, int bottom) {
         if (getLeft() != left || getRight() != right || getTop() != top || getBottom() != bottom) {
             mBackgroundSizeChanged = true;
@@ -179,6 +181,7 @@ public class BubbleTextView extends TextView {
     }
 
     /**
+     * 返回一个图标外框的Bitmap,以示拖放的落点.
      * Returns a new bitmap to be used as the object outline, e.g. to visualize the drop location.
      * Responsibility for the bitmap is transferred to the caller.
      */
@@ -207,6 +210,7 @@ public class BubbleTextView extends TextView {
                 // we pre-create it on ACTION_DOWN (it takes a small but perceptible amount of time
                 // to create it)
                 if (mPressedOrFocusedBackground == null) {
+                    //创建一个背景Bitmap
                     mPressedOrFocusedBackground = createGlowingOutline(
                             mTempCanvas, mPressedGlowColor, mPressedOutlineColor);
                 }
@@ -214,11 +218,12 @@ public class BubbleTextView extends TextView {
                 // have to call invalidate as soon as the state is "pressed"
                 if (isPressed()) {
                     mDidInvalidateForPressedState = true;
-                    setCellLayoutPressedOrFocusedIcon();
+                    setCellLayoutPressedOrFocusedIcon();//使之在CellLayout上可以看到边框闪烁的效果
                 } else {
                     mDidInvalidateForPressedState = false;
                 }
-
+                //如果MotionEvent.ACTION_DOWN的时间够长,达到长按的时间,
+                //则这里实际上通过调用长按事件监听器处理了长按事件
                 mLongPressHelper.postCheckForLongPress();
                 break;
             case MotionEvent.ACTION_CANCEL:
@@ -229,7 +234,7 @@ public class BubbleTextView extends TextView {
                     mPressedOrFocusedBackground = null;
                 }
 
-                mLongPressHelper.cancelLongPress();
+                mLongPressHelper.cancelLongPress();//如果手指起来后,长按时间还没有到,则取消检查.
                 break;
         }
         return result;
@@ -243,6 +248,8 @@ public class BubbleTextView extends TextView {
         setCellLayoutPressedOrFocusedIcon();
     }
 
+    /**如果BubbleText已经绘制了mPressedOrFocusedBackground,则使自己在屏幕上(实际是CellLayout)
+     * 上无效,然后重绘,以显示动画效果.*/
     void setCellLayoutPressedOrFocusedIcon() {
         if (getParent() instanceof ShortcutAndWidgetContainer) {
             ShortcutAndWidgetContainer parent = (ShortcutAndWidgetContainer) getParent();

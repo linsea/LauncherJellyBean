@@ -24,6 +24,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
+/**一个辅助类,把传入的Bitmap进行一些处理,然后返回一个新的处理过后的Bitmap*/
 class FastBitmapDrawable extends Drawable {
     private Bitmap mBitmap;
     private int mAlpha;

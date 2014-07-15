@@ -3529,6 +3529,7 @@ public class Workspace extends SmoothPagedView
     }
 
     /**
+     * 返回所有的CellLayout,也就是ShortcutAndWidgetContainer的父容器.
      * Returns a list of all the CellLayouts in the workspace.
      */
     ArrayList<CellLayout> getWorkspaceAndHotseatCellLayouts() {
@@ -3544,6 +3545,8 @@ public class Workspace extends SmoothPagedView
     }
 
     /**
+     * 获取所有的(包括hotseat上的)ShortcutAndWidgetContainer.ShortcutAndWidgetContainer才是真正放
+     * 快捷方式或文件夹或Widget的ViewGroup.所以通过这个来找特定的View.
      * We should only use this to search for specific children.  Do not use this method to modify
      * ShortcutsAndWidgetsContainer directly. Includes ShortcutAndWidgetContainers from
      * the hotseat and workspace pages
@@ -3570,7 +3573,7 @@ public class Workspace extends SmoothPagedView
                 View child = layout.getChildAt(i);
                 if (child instanceof Folder) {
                     Folder f = (Folder) child;
-                    if (f.getInfo() == tag && f.getInfo().opened) {
+                    if (f.getInfo() == tag && f.getInfo().opened) {//文件夹是打开的!
                         return f;
                     }
                 }
@@ -3579,6 +3582,11 @@ public class Workspace extends SmoothPagedView
         return null;
     }
 
+    /**
+     * 寻找携带这个tag的View
+     * @param tag
+     * @return
+     */
     public View getViewForTag(Object tag) {
         ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
                 getAllShortcutAndWidgetContainers();
@@ -3594,6 +3602,7 @@ public class Workspace extends SmoothPagedView
         return null;
     }
 
+    /**删除所有的DropTarget*/
     void clearDropTargets() {
         ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
                 getAllShortcutAndWidgetContainers();
@@ -3608,6 +3617,7 @@ public class Workspace extends SmoothPagedView
         }
     }
 
+    /**从桌面上删除指定的应用列表中包含的快捷方式*/
     void removeItems(final ArrayList<ApplicationInfo> apps) {
         final AppWidgetManager widgets = AppWidgetManager.getInstance(getContext());
 
@@ -3632,7 +3642,7 @@ public class Workspace extends SmoothPagedView
                         final View view = layout.getChildAt(j);
                         Object tag = view.getTag();
 
-                        if (tag instanceof ShortcutInfo) {
+                        if (tag instanceof ShortcutInfo) {//删除快捷方式
                             final ShortcutInfo info = (ShortcutInfo) tag;
                             final Intent intent = info.intent;
                             final ComponentName name = intent.getComponent();
@@ -3643,7 +3653,7 @@ public class Workspace extends SmoothPagedView
                                     childrenToRemove.add(view);
                                 }
                             }
-                        } else if (tag instanceof FolderInfo) {
+                        } else if (tag instanceof FolderInfo) {//这里删除文件夹,包括它里面的所有快捷方式
                             final FolderInfo info = (FolderInfo) tag;
                             final ArrayList<ShortcutInfo> contents = info.contents;
                             final int contentsCount = contents.size();
@@ -3662,10 +3672,10 @@ public class Workspace extends SmoothPagedView
                                 }
                             }
                             for (ShortcutInfo item: appsToRemoveFromFolder) {
-                                info.remove(item);
+                                info.remove(item);//在文件夹中的快捷方式从文件夹中删除,与上面桌面的不同
                                 LauncherModel.deleteItemFromDatabase(mLauncher, item);
                             }
-                        } else if (tag instanceof LauncherAppWidgetInfo) {
+                        } else if (tag instanceof LauncherAppWidgetInfo) {//删除Widget
                             final LauncherAppWidgetInfo info = (LauncherAppWidgetInfo) tag;
                             final ComponentName provider = info.providerName;
                             if (provider != null) {
@@ -3681,9 +3691,9 @@ public class Workspace extends SmoothPagedView
                     for (int j = 0; j < childCount; j++) {
                         View child = childrenToRemove.get(j);
                         // Note: We can not remove the view directly from CellLayoutChildren as this
-                        // does not re-mark the spaces as unoccupied.
+                        // does not re-mark the spaces as unoccupied.注意标记占用数组,留出空位
                         layoutParent.removeViewInLayout(child);
-                        if (child instanceof DropTarget) {
+                        if (child instanceof DropTarget) {//child View可能是DropTarget吗?
                             mDragController.removeDropTarget((DropTarget)child);
                         }
                     }
@@ -3701,6 +3711,10 @@ public class Workspace extends SmoothPagedView
         // the user returns to launcher.  As a result, we really should be cleaning up the Db
         // regardless of whether the item was added or not (unlike the logic above).  This is only
         // relevant for direct workspace items.
+        //因为桌面图标BubbleTextView与Workspace中的item在数据库中可能并不是1:1的关系,因为桌面快捷方式的添加
+        //可能是在后台进行的,(还有一个应用有多个入口时,如拔号与联系人是同一个应用,packageName是一样的,但桌面可以
+        //有两个快捷方式).所以如果桌面删除了快捷方式,我们要把数据库中对应的所有此快捷方式的数据都删除掉.(所以这里
+        //有个bug,如果删除拔号应用图标,如果桌面也有联系人,那么联系人也被删除了)
         post(new Runnable() {
             @Override
             public void run() {
@@ -3718,7 +3732,7 @@ public class Workspace extends SmoothPagedView
                         LauncherModel.deleteItemFromDatabase(mLauncher, info);
                     }
                     // Remove all queued items that match the same package
-                    if (newApps != null) {
+                    if (newApps != null) {//这一步可能是同步NEW_APPS_LIST中的数据,因为上面可能已经删除了
                         synchronized (newApps) {
                             Iterator<String> iter = newApps.iterator();
                             while (iter.hasNext()) {
@@ -3737,6 +3751,7 @@ public class Workspace extends SmoothPagedView
         });
     }
 
+    /**以传入的应用列表中的应用信息为参考标准,找到并更新桌面上图标,使桌面图标数据与列表中的同步*/
     void updateShortcuts(ArrayList<ApplicationInfo> apps) {
         ArrayList<ShortcutAndWidgetContainer> childrenLayouts = getAllShortcutAndWidgetContainers();
         for (ShortcutAndWidgetContainer layout: childrenLayouts) {
@@ -3745,6 +3760,7 @@ public class Workspace extends SmoothPagedView
                 final View view = layout.getChildAt(j);
                 Object tag = view.getTag();
                 if (tag instanceof ShortcutInfo) {
+                  //注意:每个View对应的Item的信息是被携带在它的Tag上的!
                     ShortcutInfo info = (ShortcutInfo) tag;
                     // We need to check for ACTION_MAIN otherwise getComponent() might
                     // return null for some shortcuts (for instance, for shortcuts to
@@ -3790,9 +3806,10 @@ public class Workspace extends SmoothPagedView
 
     @Override
     protected String getCurrentPageDescription() {
+        //mCurrentPage从0开始计数.为什么当前屏幕要返回mNextPage???
         int page = (mNextPage != INVALID_PAGE) ? mNextPage : mCurrentPage;
         return String.format(getContext().getString(R.string.workspace_scroll_format),
-                page + 1, getChildCount());
+                page + 1, getChildCount());//为什么 page要加1
     }
 
     public void getLocationInDragLayer(int[] loc) {

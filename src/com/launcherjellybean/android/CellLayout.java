@@ -317,6 +317,7 @@ public class CellLayout extends ViewGroup {
         requestLayout();
     }
 
+    /**使icon的覆盖的这部分区域invalidate*/
     private void invalidateBubbleTextView(BubbleTextView icon) {
         final int padding = icon.getPressedOrFocusedBackgroundPadding();
         invalidate(icon.getLeft() + getPaddingLeft() - padding,
@@ -2641,6 +2642,7 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
+     * 标记一个子View已经完成拖放状态
      * Mark a child as having been dropped.
      * At the beginning of the drag operation, the child may have been on another
      * screen, but it is re-parented before this method is called.
@@ -2656,8 +2658,10 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
+     * 根据格子区域范围,计算出它在屏幕中的矩形位置.
+     * [cellX,cellY]左上的格子位置.
      * Computes a bounding rectangle for a range of cells
-     *
+     * 
      * @param cellX X coordinate of upper left corner expressed as a cell position
      * @param cellY Y coordinate of upper left corner expressed as a cell position
      * @param cellHSpan Width in cells
@@ -2676,7 +2680,7 @@ public class CellLayout extends ViewGroup {
         int width = cellHSpan * cellWidth + ((cellHSpan - 1) * widthGap);
         int height = cellVSpan * cellHeight + ((cellVSpan - 1) * heightGap);
 
-        int x = hStartPadding + cellX * (cellWidth + widthGap);
+        int x = hStartPadding + cellX * (cellWidth + widthGap);//坐标
         int y = vStartPadding + cellY * (cellHeight + heightGap);
 
         resultRect.set(x, y, x + width, y + height);
@@ -2694,12 +2698,21 @@ public class CellLayout extends ViewGroup {
         return rectToCell(getResources(), width, height, result);
     }
 
+    /**
+     * 给定宽度和高度,计算需要占个几个格子
+     * @param resources
+     * @param width 指定的宽度像素
+     * @param height 指定的高度像素
+     * @param result 返回值,包含宽/高度格子个数 
+     * @return
+     */
     public static int[] rectToCell(Resources resources, int width, int height, int[] result) {
         // Always assume we're working with the smallest span to make sure we
         // reserve enough space in both orientations.
         int actualWidth = resources.getDimensionPixelSize(R.dimen.workspace_cell_width);
         int actualHeight = resources.getDimensionPixelSize(R.dimen.workspace_cell_height);
-        int smallerSize = Math.min(actualWidth, actualHeight);
+        //为什么要取最小值?
+        int smallerSize = Math.min(actualWidth, actualHeight);//bug?可能会保留过多的空间
 
         // Always round up to next largest cell
         int spanX = (int) Math.ceil(width / (float) smallerSize);
@@ -2713,6 +2726,12 @@ public class CellLayout extends ViewGroup {
         return result;
     }
 
+    /**
+     * 根据格子范围换算出占用的矩形大小
+     * @param hSpans 水平方向的格子数
+     * @param vSpans 垂直方向的格子数
+     * @return
+     */
     public int[] cellSpansToSize(int hSpans, int vSpans) {
         int[] size = new int[2];
         size[0] = hSpans * mCellWidth + (hSpans - 1) * mWidthGap;
@@ -2721,6 +2740,7 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
+     * 计算并设置ItemInfo的spanX,spanY
      * Calculate the grid spans needed to fit given item
      */
     public void calculateSpans(ItemInfo info) {
@@ -2757,6 +2777,16 @@ public class CellLayout extends ViewGroup {
         return findVacantCell(vacant, spanX, spanY, mCountX, mCountY, mOccupied);
     }
 
+    /**
+     * 为Item寻找一个空闲的位置
+     * @param vacant 返回的表示空白区域的第一个格子的位置
+     * @param spanX Item的列范围spanX
+     * @param spanY Item的行范围spanY
+     * @param xCount
+     * @param yCount
+     * @param occupied
+     * @return 是否找到
+     */
     static boolean findVacantCell(int[] vacant, int spanX, int spanY,
             int xCount, int yCount, boolean[][] occupied) {
 
