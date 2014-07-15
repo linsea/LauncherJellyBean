@@ -88,7 +88,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
     protected boolean mFirstLayout = true;
 
-    protected int mCurrentPage;
+    protected int mCurrentPage;//从0开始计数
     protected int mNextPage = INVALID_PAGE;
     protected int mMaxScrollX;
     protected Scroller mScroller;

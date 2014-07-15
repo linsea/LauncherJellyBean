@@ -41,6 +41,7 @@ public class CheckLongPressHelper {
         mView = v;
     }
 
+    /**长按时间到了后,检查长按事件有没有处理*/
     public void postCheckForLongPress() {
         mHasPerformedLongPress = false;
 
