@@ -107,12 +107,12 @@ public class BubbleTextView extends TextView {
         return super.setFrame(left, top, right, bottom);
     }
 
-    @Override
+    @Override //核实一下传入参数的图片是否是正在显示的图片
     protected boolean verifyDrawable(Drawable who) {
         return who == mBackground || super.verifyDrawable(who);
     }
 
-    @Override
+    @Override //如果显示的图片状态改变了,则系统会回调此方法
     protected void drawableStateChanged() {
         if (isPressed()) {
             // In this case, we have already created the pressed outline on ACTION_DOWN,
@@ -160,7 +160,7 @@ public class BubbleTextView extends TextView {
      */
     private void drawWithPadding(Canvas destCanvas, int padding) {
         final Rect clipRect = mTempRect;
-        getDrawingRect(clipRect);
+        getDrawingRect(clipRect);//Return the visible drawing bounds of your view.
 
         // adjust the clip rect so that we don't include the text label
         clipRect.bottom =

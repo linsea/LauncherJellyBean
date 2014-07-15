@@ -70,7 +70,7 @@ public class CellLayout extends ViewGroup {
     private int mWidthGap;
     private int mHeightGap;
     private int mMaxGap;
-    private boolean mScrollingTransformsDirty = false;
+    private boolean mScrollingTransformsDirty = false;//已经部分或全部显示了滑到左/右到底时的动画,即Y轴有个旋转的动画.
 
     private final Rect mRect = new Rect();
     private final CellInfo mCellInfo = new CellInfo();//表示在CellLayout上长按的某个空的格子
@@ -280,6 +280,7 @@ public class CellLayout extends ViewGroup {
         addView(mShortcutsAndWidgets);
     }
 
+    /**竖屏时的宽度*/
     static int widthInPortrait(Resources r, int numCells) {
         // We use this method from Workspace to figure out how many rows/columns Launcher should
         // have. We ignore the left/right padding on CellLayout because it turns out in our design
@@ -291,6 +292,7 @@ public class CellLayout extends ViewGroup {
         return  minGap * (numCells - 1) + cellWidth * numCells;
     }
 
+    /**横屏时的高度*/
     static int heightInLandscape(Resources r, int numCells) {
         // We use this method from Workspace to figure out how many rows/columns Launcher should
         // have. We ignore the left/right padding on CellLayout because it turns out in our design
@@ -323,6 +325,7 @@ public class CellLayout extends ViewGroup {
                 icon.getBottom() + getPaddingTop() + padding);
     }
 
+    /**设置滑到左或右到底后,前景图片的Alpha透明度*/
     void setOverScrollAmount(float r, boolean left) {
         if (left && mOverScrollForegroundDrawable != mOverScrollLeft) {
             mOverScrollForegroundDrawable = mOverScrollLeft;
@@ -335,6 +338,7 @@ public class CellLayout extends ViewGroup {
         invalidate();
     }
 
+    /**设置当前按下的或获取到焦点的图标*/
     void setPressedOrFocusedIcon(BubbleTextView icon) {
         // We draw the pressed or focused BubbleTextView's background in CellLayout because it
         // requires an expanded clip rect (due to the glow's blur radius)
@@ -348,6 +352,7 @@ public class CellLayout extends ViewGroup {
         }
     }
 
+    /**设置是否正在屏幕上拖着某图标*/
     void setIsDragOverlapping(boolean isDragOverlapping) {
         if (mIsDragOverlapping != isDragOverlapping) {
             mIsDragOverlapping = isDragOverlapping;
@@ -363,6 +368,7 @@ public class CellLayout extends ViewGroup {
         mScrollingTransformsDirty = dirty;
     }
 
+    /**还原左/右滑到底后的状态,有点像是取消到底后再滑时的动画*/
     protected void resetOverscrollTransforms() {
         if (mScrollingTransformsDirty) {
             setOverscrollTransformsDirty(false);
@@ -383,7 +389,7 @@ public class CellLayout extends ViewGroup {
         // When we're small, we are either drawn normally or in the "accepts drops" state (during
         // a drag). However, we also drag the mini hover background *over* one of those two
         // backgrounds
-        if (mBackgroundAlpha > 0.0f) {
+        if (mBackgroundAlpha > 0.0f) {//画背景
             Drawable bg;
 
             if (mIsDragOverlapping) {
@@ -395,23 +401,23 @@ public class CellLayout extends ViewGroup {
 
             bg.setAlpha((int) (mBackgroundAlpha * mBackgroundAlphaMultiplier * 255));
             bg.setBounds(mBackgroundRect);
-            bg.draw(canvas);
+            bg.draw(canvas);//画背景
         }
 
-        final Paint paint = mDragOutlinePaint;
+        final Paint paint = mDragOutlinePaint;//
         for (int i = 0; i < mDragOutlines.length; i++) {
             final float alpha = mDragOutlineAlphas[i];
             if (alpha > 0) {
                 final Rect r = mDragOutlines[i];
                 final Bitmap b = (Bitmap) mDragOutlineAnims[i].getTag();
                 paint.setAlpha((int)(alpha + .5f));
-                canvas.drawBitmap(b, null, r, paint);
+                canvas.drawBitmap(b, null, r, paint);//画外部轮廓
             }
         }
 
         // We draw the pressed or focused BubbleTextView's background in CellLayout because it
         // requires an expanded clip rect (due to the glow's blur radius)
-        if (mPressedOrFocusedIcon != null) {
+        if (mPressedOrFocusedIcon != null) {//画按下或获取到焦点的图标的背景
             final int padding = mPressedOrFocusedIcon.getPressedOrFocusedBackgroundPadding();
             final Bitmap b = mPressedOrFocusedIcon.getPressedOrFocusedBackground();
             if (b != null) {
@@ -432,7 +438,7 @@ public class CellLayout extends ViewGroup {
                         cellToPoint(i, j, pt);
                         canvas.save();
                         canvas.translate(pt[0], pt[1]);
-                        cd.draw(canvas);
+                        cd.draw(canvas);//调试时把占用中的格子画所红色的.
                         canvas.restore();
                     }
                 }
@@ -441,7 +447,7 @@ public class CellLayout extends ViewGroup {
 
         int previewOffset = FolderRingAnimator.sPreviewSize;
 
-        // The folder outer / inner ring image(s)
+        // The folder outer / inner ring image(s).文件夹的内外圆圈
         for (int i = 0; i < mFolderOuterRings.size(); i++) {
             FolderRingAnimator fra = mFolderOuterRings.get(i);
 
@@ -495,7 +501,7 @@ public class CellLayout extends ViewGroup {
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        if (mForegroundAlpha > 0) {
+        if (mForegroundAlpha > 0) {//如果滑到底了,画前景图
             mOverScrollForegroundDrawable.setBounds(mForegroundRect);
             Paint p = ((NinePatchDrawable) mOverScrollForegroundDrawable).getPaint();
             p.setXfermode(sAddBlendMode);
@@ -570,7 +576,7 @@ public class CellLayout extends ViewGroup {
             BubbleTextView bubbleChild = (BubbleTextView) child;
 
             Resources res = getResources();
-            if (mIsHotseat) {
+            if (mIsHotseat) {//托盘上的应用标题为透明的,看起来没有显示
                 bubbleChild.setTextColor(res.getColor(android.R.color.transparent));
             } else {
                 bubbleChild.setTextColor(res.getColor(R.color.workspace_icon_text_color));
@@ -778,6 +784,7 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
+     * 给定一个格子的坐标,得到它的左上角点的坐标
      * Given a cell coordinate, return the point that represents the upper left corner of that cell
      *
      * @param cellX X coordinate of the cell
@@ -1295,6 +1302,10 @@ public class CellLayout extends ViewGroup {
         }
     }
 
+    /**
+     * 把使用完后的Stack里面的元素全部压入mTempRectStack,以回收下次再用.
+     * @param used 使用完了后的Stack
+     */
     private void recycleTempRects(Stack<Rect> used) {
         while (!used.isEmpty()) {
             mTempRectStack.push(used.pop());
