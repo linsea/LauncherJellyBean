@@ -30,7 +30,10 @@ public class CheckLongPressHelper {
             if ((mView.getParent() != null) && mView.hasWindowFocus()//为什么要这个条件?
                     && !mHasPerformedLongPress) {
                 if (mView.performLongClick()) {
-                    mView.setPressed(false);//设置视图内部的按下状态
+                    //设置视图内部的按下状态.
+                    //实际上这里我们"偷偷地"执行了Pressed应该执行的动作,(即View的OnLongClickListener)
+                    //但为了使其他的人能够通过检查pressed状态处理它自己的逻辑,故在此恢复其内部pressed状态.
+                    mView.setPressed(false);
                     mHasPerformedLongPress = true;//返回检查结果
                 }
             }
@@ -41,7 +44,8 @@ public class CheckLongPressHelper {
         mView = v;
     }
 
-    /**长按时间到了后,检查长按事件有没有处理*/
+    /**做以下准备动作:当长按的时间满足触发长按事件时,调用其OnLongClickListener执行处理方法,
+     * 如果这个View没有OnLongClickListener或不处理此事件,则检查的结果为false*/
     public void postCheckForLongPress() {
         mHasPerformedLongPress = false;
 
@@ -53,7 +57,7 @@ public class CheckLongPressHelper {
         mView.postDelayed(mPendingCheckForLongPress, LauncherApplication.getLongPressTimeout());
     }
 
-    /**取消检查长按事件的Runnable任务*/
+    /**取消检查及长按事件的Runnable任务*/
     public void cancelLongPress() {
         mHasPerformedLongPress = false;
         if (mPendingCheckForLongPress != null) {
