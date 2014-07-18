@@ -91,8 +91,8 @@ public class CellLayout extends ViewGroup {
     private int[] mFolderLeaveBehindCell = {-1, -1};
 
     private int mForegroundAlpha = 0;
-    private float mBackgroundAlpha;
-    private float mBackgroundAlphaMultiplier = 1.0f;
+    private float mBackgroundAlpha;//背景透明度
+    private float mBackgroundAlphaMultiplier = 1.0f;//背景透明度因子
 
     private Drawable mNormalBackground;
     private Drawable mActiveGlowBackground;
@@ -120,7 +120,7 @@ public class CellLayout extends ViewGroup {
 
     private BubbleTextView mPressedOrFocusedIcon;
 
-    private HashMap<CellLayout.LayoutParams, Animator> mReorderAnimators = new
+    private HashMap<CellLayout.LayoutParams, Animator> mReorderAnimators = new  //格子重新排序时的动画记录表
             HashMap<CellLayout.LayoutParams, Animator>();
     private HashMap<View, ReorderHintAnimation>
             mShakeAnimators = new HashMap<View, ReorderHintAnimation>();
@@ -353,7 +353,7 @@ public class CellLayout extends ViewGroup {
         }
     }
 
-    /**设置是否正在屏幕上拖着某图标*/
+    /**设置状态变量:是否正在屏幕上拖着某图标*/
     void setIsDragOverlapping(boolean isDragOverlapping) {
         if (mIsDragOverlapping != isDragOverlapping) {
             mIsDragOverlapping = isDragOverlapping;
@@ -535,6 +535,9 @@ public class CellLayout extends ViewGroup {
     }
 
     @Override
+    //迟延向子View传递按下动作,像List,如果按下,
+    //但实际用户想滑动,则不用在按下时马上向子View传递按下事件.
+    //对于可以滚动(scroll)的ViewGroup,应该返回true.
     public boolean shouldDelayChildPressedState() {
         return false;
     }
@@ -662,10 +665,11 @@ public class CellLayout extends ViewGroup {
         mCellInfo.screen = ((ViewGroup) getParent()).indexOfChild(this);
     }
 
+    /**根据传入的坐标点,找到包含这个点的格子,然后把这个格子设置到CellLayout的Tag里*/
     public void setTagToCellInfoForPoint(int touchX, int touchY) {
         final CellInfo cellInfo = mCellInfo;
         Rect frame = mRect;
-        final int x = touchX + getScrollX();
+        final int x = touchX + getScrollX();//如果整个CellLayout可视,点在它上的X坐标
         final int y = touchY + getScrollY();
         final int count = mShortcutsAndWidgets.getChildCount();
 
@@ -678,14 +682,14 @@ public class CellLayout extends ViewGroup {
                     lp.isLockedToGrid) {
                 child.getHitRect(frame);
 
-                float scale = child.getScaleX();
+                float scale = child.getScaleX();//X轴的放大因子,默认为1.0f,即没有放大.
                 frame = new Rect(child.getLeft(), child.getTop(), child.getRight(),
                         child.getBottom());
                 // The child hit rect is relative to the CellLayoutChildren parent, so we need to
                 // offset that by this CellLayout's padding to test an (x,y) point that is relative
                 // to this view.
                 frame.offset(getPaddingLeft(), getPaddingTop());
-                frame.inset((int) (frame.width() * (1f - scale) / 2),
+                frame.inset((int) (frame.width() * (1f - scale) / 2),//(参数为负)增大或(参数为正)减小Rect,
                         (int) (frame.height() * (1f - scale) / 2));
 
                 if (frame.contains(x, y)) {
@@ -753,6 +757,7 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
+     * 根据坐标点,在result中返回它所在的格子的坐标.(即这个格子精确地包含了这个点)
      * Given a point, return the cell that strictly encloses that point
      * @param x X coordinate of the point
      * @param y Y coordinate of the point
@@ -775,6 +780,7 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
+     * 根据坐标点,在result中返回离它最近的格子的坐标.
      * Given a point, return the cell that most closely encloses that point
      * @param x X coordinate of the point
      * @param y Y coordinate of the point
@@ -814,7 +820,7 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
-     * Given a cell coordinate and span return the point that represents the center of the regio
+     * Given a cell coordinate and span return the point that represents the center of the region
      *
      * @param cellX X coordinate of the cell
      * @param cellY Y coordinate of the cell
@@ -831,6 +837,7 @@ public class CellLayout extends ViewGroup {
     }
 
      /**
+     * 给定一个起始格子坐标及它的尺寸范围,返回所占区域的矩形
      * Given a cell coordinate and span fills out a corresponding pixel rect
      *
      * @param cellX X coordinate of the cell
@@ -846,6 +853,7 @@ public class CellLayout extends ViewGroup {
                 top + (spanY * mCellHeight + (spanY - 1) * mHeightGap));
     }
 
+    /**从给定坐标点到某格子坐标中心点的距离*/
     public float getDistanceFromCell(float x, float y, int[] cell) {
         cellToCenterPoint(cell[0], cell[1], mTmpPoint);
         float distance = (float) Math.sqrt( Math.pow(x - mTmpPoint[0], 2) +
@@ -950,6 +958,7 @@ public class CellLayout extends ViewGroup {
             int vFreeSpace = vSpace - (mCountY * mCellHeight);
             mWidthGap = Math.min(mMaxGap, numWidthGaps > 0 ? (hFreeSpace / numWidthGaps) : 0);
             mHeightGap = Math.min(mMaxGap,numHeightGaps > 0 ? (vFreeSpace / numHeightGaps) : 0);
+            //设置组合View(由ViewGroup组成,这里是CellLayout)里面的ShortcutAndWidget的尺寸范围
             mShortcutsAndWidgets.setCellDimensions(mCellWidth, mCellHeight, mWidthGap, mHeightGap);
         } else {
             mWidthGap = mOriginalWidthGap;
@@ -968,12 +977,14 @@ public class CellLayout extends ViewGroup {
         }
 
         int count = getChildCount();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {//这里其实只有一个Child,即ShortcutAndWidget
             View child = getChildAt(i);
             int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(newWidth - getPaddingLeft() -
                     getPaddingRight(), MeasureSpec.EXACTLY);
             int childheightMeasureSpec = MeasureSpec.makeMeasureSpec(newHeight - getPaddingTop() -
                     getPaddingBottom(), MeasureSpec.EXACTLY);
+            //这里其实只有一个Child,即ShortcutAndWidget,所以循环里设置所有的Child的尺寸范围一样的.
+            //否则每个Child应单独布局它的位置.
             child.measure(childWidthMeasureSpec, childheightMeasureSpec);
         }
         setMeasuredDimension(newWidth, newHeight);
@@ -984,12 +995,17 @@ public class CellLayout extends ViewGroup {
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
+          //child是ShortcutAndWidgetContainer,这里只有一个,所以for循环里下面传入的参数都一样.
+            //如果child有多个且不一样,通常每个都要单独布局它的位置.
             child.layout(getPaddingLeft(), getPaddingTop(),
                     r - l - getPaddingRight(), b - t - getPaddingBottom());
         }
     }
 
     @Override
+    //当视图的Size改变时的回调方法.
+    //This is called during layout when the size of this view has changed. 
+    //If you were just added to the view hierarchy, you're called with the old values of 0.
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         mBackgroundRect.set(0, 0, w, h);
@@ -1036,6 +1052,7 @@ public class CellLayout extends ViewGroup {
         }
     }
 
+    /**从这个方法的实现可知CellLayout只有一个Child, 即ShortcutAndWidgetContainer*/
     public ShortcutAndWidgetContainer getShortcutsAndWidgets() {
         if (getChildCount() > 0) {
             return (ShortcutAndWidgetContainer) getChildAt(0);
@@ -1047,6 +1064,17 @@ public class CellLayout extends ViewGroup {
         return mShortcutsAndWidgets.getChildAt(x, y);
     }
 
+    /**
+     * 把一个视图从它原来的位置以动画的形式移动到新的格子位置
+     * @param child 图标视图
+     * @param cellX 新格子的坐标
+     * @param cellY 新格子的坐标
+     * @param duration
+     * @param delay
+     * @param permanent 
+     * @param adjustOccupied
+     * @return
+     */
     public boolean animateChildToPosition(final View child, int cellX, int cellY, int duration,
             int delay, boolean permanent, boolean adjustOccupied) {
         ShortcutAndWidgetContainer clc = getShortcutsAndWidgets();
@@ -1068,18 +1096,18 @@ public class CellLayout extends ViewGroup {
             final int oldX = lp.x;
             final int oldY = lp.y;
             if (adjustOccupied) {
-                occupied[lp.cellX][lp.cellY] = false;
-                occupied[cellX][cellY] = true;
+                occupied[lp.cellX][lp.cellY] = false;//标记原来的格子为非占用状态
+                occupied[cellX][cellY] = true;//标记新的格子为占用状态
             }
             lp.isLockedToGrid = true;
             if (permanent) {
-                lp.cellX = info.cellX = cellX;
+                lp.cellX = info.cellX = cellX;//最终坐标
                 lp.cellY = info.cellY = cellY;
             } else {
-                lp.tmpCellX = cellX;
+                lp.tmpCellX = cellX;//临时坐标
                 lp.tmpCellY = cellY;
             }
-            clc.setupLp(lp);
+            clc.setupLp(lp);//设置lp的尺寸范围
             lp.isLockedToGrid = false;
             final int newX = lp.x;
             final int newY = lp.y;
@@ -1095,14 +1123,14 @@ public class CellLayout extends ViewGroup {
 
             ValueAnimator va = ValueAnimator.ofFloat(0f, 1f);
             va.setDuration(duration);
-            mReorderAnimators.put(lp, va);
+            mReorderAnimators.put(lp, va);//记录将要播放的动画
 
             va.addUpdateListener(new AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
                     float r = ((Float) animation.getAnimatedValue()).floatValue();
-                    lp.x = (int) ((1 - r) * oldX + r * newX);
-                    lp.y = (int) ((1 - r) * oldY + r * newY);
+                    lp.x = (int) ((1 - r) * oldX + r * newX);//计算每一段播放时间过后,每一帧动画的视图的X坐标
+                    lp.y = (int) ((1 - r) * oldY + r * newY);//从原坐标一直向目标坐标逼近
                     child.requestLayout();
                 }
             });
@@ -1132,9 +1160,10 @@ public class CellLayout extends ViewGroup {
     }
 
     /**
+     * 计算拖动中的item,如果Drop,它将会放置在什么位置. result中返回格子的坐标.
      * Estimate where the top left cell of the dragged item will land if it is dropped.
      *
-     * @param originX The X value of the top left corner of the item
+     * @param originX item所示区域的左上角的坐标系X坐标. The X value of the top left corner of the item
      * @param originY The Y value of the top left corner of the item
      * @param spanX The number of horizontal cells that the item spans
      * @param spanY The number of vertical cells that the item spans
@@ -1146,7 +1175,7 @@ public class CellLayout extends ViewGroup {
 
         // pointToCellRounded takes the top left of a cell but will pad that with
         // cellWidth/2 and cellHeight/2 when finding the matching cell
-        pointToCellRounded(originX, originY, result);
+        pointToCellRounded(originX, originY, result);//这个result返回的应该是左上格子的格子坐标
 
         // If the item isn't fully on this screen, snap to the edges
         int rightOverhang = result[0] + spanX - countX;
@@ -1161,15 +1190,30 @@ public class CellLayout extends ViewGroup {
         result[1] = Math.max(0, result[1]); // Snap to top
     }
 
+    /**
+     * 显示Drop落点
+     * @param v 拖动的View
+     * @param dragOutline
+     * @param originX 原始的拖动中心点坐标
+     * @param originY
+     * @param cellX 目标格子坐标
+     * @param cellY
+     * @param spanX Item的尺寸范围
+     * @param spanY
+     * @param resize 是否根据cellX, cellY, spanX, spanY重设DragOutline的区域
+     * @param dragOffset 拖动的偏移量,修正拖动的中心点
+     * @param dragRegion 拖动的区域
+     */
     void visualizeDropLocation(View v, Bitmap dragOutline, int originX, int originY, int cellX,
             int cellY, int spanX, int spanY, boolean resize, Point dragOffset, Rect dragRegion) {
         final int oldDragCellX = mDragCell[0];
         final int oldDragCellY = mDragCell[1];
 
         if (v != null && dragOffset == null) {
+            //调整拖动的中心到视图中心点处
             mDragCenter.set(originX + (v.getWidth() / 2), originY + (v.getHeight() / 2));
         } else {
-            mDragCenter.set(originX, originY);
+            mDragCenter.set(originX, originY);//设置拖动的中心点
         }
 
         if (dragOutline == null && v == null) {
@@ -1181,7 +1225,7 @@ public class CellLayout extends ViewGroup {
             mDragCell[1] = cellY;
             // Find the top left corner of the rect the object will occupy
             final int[] topLeft = mTmpPoint;
-            cellToPoint(cellX, cellY, topLeft);
+            cellToPoint(cellX, cellY, topLeft);//找到目标格子的左上角点的坐标
 
             int left = topLeft[0];
             int top = topLeft[1];
@@ -1189,6 +1233,7 @@ public class CellLayout extends ViewGroup {
             if (v != null && dragOffset == null) {
                 // When drawing the drag outline, it did not account for margin offsets
                 // added by the view's parent.
+                //目标点向右下方向移动一点(去掉了margin,到时outline看起来像是画在中央位置,好看一点)
                 MarginLayoutParams lp = (MarginLayoutParams) v.getLayoutParams();
                 left += lp.leftMargin;
                 top += lp.topMargin;
@@ -1196,6 +1241,7 @@ public class CellLayout extends ViewGroup {
                 // Offsets due to the size difference between the View and the dragOutline.
                 // There is a size difference to account for the outer blur, which may lie
                 // outside the bounds of the view.
+                //考虑到光晕,坐标点再向右下移动一点
                 top += (v.getHeight() - dragOutline.getHeight()) / 2;
                 // We center about the x axis
                 left += ((mCellWidth * spanX) + ((spanX - 1) * mWidthGap)
@@ -1225,13 +1271,14 @@ public class CellLayout extends ViewGroup {
             }
 
             mDragOutlineAnims[mDragOutlineCurrent].setTag(dragOutline);
-            mDragOutlineAnims[mDragOutlineCurrent].animateIn();
+            mDragOutlineAnims[mDragOutlineCurrent].animateIn();//开始淡入动画
         }
     }
 
+    /**取消动画淡入,马上使动画淡出DragOutline*/
     public void clearDragOutlines() {
         final int oldIndex = mDragOutlineCurrent;
-        mDragOutlineAnims[oldIndex].animateOut();
+        mDragOutlineAnims[oldIndex].animateOut();//反向动画,类似马上淡出效果
         mDragCell[0] = mDragCell[1] = -1;
     }
 
@@ -1459,19 +1506,23 @@ public class CellLayout extends ViewGroup {
      * desired location. This method computers distance based on unit grid distances,
      * not pixel distances.
      *
-     * @param cellX The X cell nearest to which you want to search for a vacant area.
+     * @param cellX 你想从此开始搜索空白区域的格子的X坐标.
+     * The X cell nearest to which you want to search for a vacant area.
      * @param cellY The Y cell nearest which you want to search for a vacant area.
-     * @param spanX Horizontal span of the object.
+     * @param 对象的尺寸范围.spanX Horizontal span of the object.
      * @param spanY Vertical span of the object.
-     * @param direction The favored direction in which the views should move from x, y
+     * @param direction 优先的搜索方向的坐标,即优先往这个方向搜索.
+     * The favored direction in which the views should move from x, y
      * @param exactDirectionOnly If this parameter is true, then only solutions where the direction
      *        matches exactly. Otherwise we find the best matching direction.
      * @param occoupied The array which represents which cells in the CellLayout are occupied
-     * @param blockOccupied The array which represents which cells in the specified block (cellX,
+     * @param blockOccupied 当某个区域块一起移动时,表示这个块信息(cellX, cellY, spanX, spanY).
+     * The array which represents which cells in the specified block (cellX,
      *        cellY, spanX, spanY) are occupied. This is used when try to move a group of views. 
      * @param result Array in which to place the result, or null (in which case a new array will
      *        be allocated)
-     * @return The X, Y cell of a vacant area that can contain this object,
+     * @return 返回找到区域的第一个格子的坐标.
+     * The X, Y cell of a vacant area that can contain this object,
      *         nearest the requested location.
      */
     private int[] findNearestArea(int cellX, int cellY, int spanX, int spanY, int[] direction,

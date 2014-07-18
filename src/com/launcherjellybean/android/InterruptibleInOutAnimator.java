@@ -21,6 +21,9 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 
 /**
+ * 一个淡入淡出动画的辅助类,可以被打断,以相反的方向播放.
+ * 注意使用时,需要通过addUpdateListener方法添加自己的监听器,然后更新View,
+ * 通过addListener方法,监听播放阶段.具体使用参考CellLayout中的相关部分.
  * A convenience class for two-way animations, e.g. a fadeIn/fadeOut animation.
  * With a regular ValueAnimator, if you call reverse to show the 'out' animation, you'll get
  * a frame-by-frame mirror of the 'in' animation -- i.e., the interpolated values will

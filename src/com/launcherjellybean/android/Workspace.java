@@ -67,6 +67,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
+ * workspace是一个包含墙纸和有限的几个页面的区域,它的宽度是固定的.
  * 最重要的几个变量:3个CellLayout,Launcher,DragController,FolderIcon
  * 
  * The workspace is a wide area with a wallpaper and a finite number of pages.
@@ -397,6 +398,7 @@ public class Workspace extends SmoothPagedView
         mLauncher.lockScreenOrientation();
         setChildrenBackgroundAlphaMultipliers(1f);
         // Prevent any Un/InstallShortcutReceivers from updating the db while we are dragging
+      //拖动过程中安装与卸载应用先进行队列缓存,而不准修改数据库,以保持数据一致性.
         InstallShortcutReceiver.enableInstallQueue();
         UninstallShortcutReceiver.enableUninstallQueue();
     }
