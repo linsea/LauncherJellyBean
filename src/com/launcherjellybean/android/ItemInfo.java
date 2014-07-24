@@ -127,6 +127,7 @@ class ItemInfo {
     }
 
     /**
+     * 往传入参数ContentValues里面写入存储数据到DB时的字段信息.
      * Write the fields of this item to the DB
      * 
      * @param values

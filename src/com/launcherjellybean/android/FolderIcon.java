@@ -46,12 +46,13 @@ import com.launcherjellybean.android.FolderInfo.FolderListener;
 import java.util.ArrayList;
 
 /**
+ * 桌面上的文件夹图标,是一个LinearLayout,它里面可以放入其他的View的缩略图.
  * An icon that can appear on in the workspace representing an {@link UserFolder}.
  */
 public class FolderIcon extends LinearLayout implements FolderListener {
     private Launcher mLauncher;
     Folder mFolder;
-    FolderInfo mInfo;
+    FolderInfo mInfo;//此FolderIcon关联的FolderInfo
     private static boolean sStaticValuesDirty = true;
 
     private CheckLongPressHelper mLongPressHelper;
@@ -110,13 +111,15 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         mLongPressHelper = new CheckLongPressHelper(this);
     }
 
+    /**此时是否可以Drop操作*/
     public boolean isDropEnabled() {
-        final ViewGroup cellLayoutChildren = (ViewGroup) getParent();
+        final ViewGroup cellLayoutChildren = (ViewGroup) getParent();//ShortcutAndWidgetContainer
         final ViewGroup cellLayout = (ViewGroup) cellLayoutChildren.getParent();
         final Workspace workspace = (Workspace) cellLayout.getParent();
         return !workspace.isSmall();
     }
 
+    /**从预先的XML配置文件中组装FolderIcon*/
     static FolderIcon fromXml(int resId, Launcher launcher, ViewGroup group,
             FolderInfo folderInfo, IconCache iconCache) {
         @SuppressWarnings("all") // suppress dead code warning
@@ -295,6 +298,7 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         LauncherModel.addOrMoveItemInDatabase(mLauncher, item, mInfo.id, 0, item.cellX, item.cellY);
     }
 
+    /**拖动进入文件夹上面,接受或拒绝Drop,如果接收则显示相应的动画.*/
     public void onDragEnter(Object dragInfo) {
         if (!willAcceptItem((ItemInfo) dragInfo)) return;
         CellLayout.LayoutParams lp = (CellLayout.LayoutParams) getLayoutParams();
@@ -429,7 +433,8 @@ public class FolderIcon extends LinearLayout implements FolderListener {
     private void computePreviewDrawingParams(Drawable d) {
         computePreviewDrawingParams(d.getIntrinsicWidth(), getMeasuredWidth());
     }
-
+    
+    /**辅助类,保存画缩略图时的参数*/
     class PreviewItemDrawingParams {
         PreviewItemDrawingParams(float transX, float transY, float scale, int overlayAlpha) {
             this.transX = transX;

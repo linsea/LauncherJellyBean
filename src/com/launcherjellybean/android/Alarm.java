@@ -78,6 +78,7 @@ public class Alarm implements Runnable{
         }
     }
 
+    /**此报警器是未决的,不可用吗?*/
     public boolean alarmPending() {
         return mAlarmPending;
     }

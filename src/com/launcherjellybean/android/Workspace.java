@@ -310,24 +310,27 @@ public class Workspace extends SmoothPagedView
             DisplayMetrics displayMetrics = res.getDisplayMetrics();
             final float actionBarHeight = actionBarSizeTypedArray.getDimension(0, 0f);
             final float systemBarHeight = res.getDimension(R.dimen.status_bar_height);
+            //smallestScreenWidthDp:横屏和竖屏时,最小min(高,宽)的尺寸.
             final float smallestScreenDim = res.getConfiguration().smallestScreenWidthDp *
                     displayMetrics.density;
 
             cellCountX = 1;
+            //用竖屏时的宽度来试探性地计算可以放几列格子.(这是无论在竖还是横屏时,可以放下的最小列值)
             while (CellLayout.widthInPortrait(res, cellCountX + 1) <= smallestScreenDim) {
                 cellCountX++;
             }
 
             cellCountY = 1;
+            //用横屏时的高度来试探性地计算可以放几行格子.(这是无论在竖还是横屏时,可以放下的最小行值)
             while (actionBarHeight + CellLayout.heightInLandscape(res, cellCountY + 1)
-                <= smallestScreenDim - systemBarHeight) {
+                <= smallestScreenDim - systemBarHeight) {//注意减去Dock栏的大概高度:systemBarHeight
                 cellCountY++;
             }
         }
 
-        mSpringLoadedShrinkFactor =
+        mSpringLoadedShrinkFactor = //当从AllApps页面长按一个图标,放入桌面时,桌面缩略图缩小的百分比.
             res.getInteger(R.integer.config_workspaceSpringLoadShrinkPercentage) / 100.0f;
-        mSpringLoadedPageSpacing =
+        mSpringLoadedPageSpacing = //SpringLoaded桌面缩略图时,页面之间的间隙
                 res.getDimensionPixelSize(R.dimen.workspace_spring_loaded_page_spacing);
         mCameraDistance = res.getInteger(R.integer.config_cameraDistance);
 
@@ -356,7 +359,8 @@ public class Workspace extends SmoothPagedView
 
     // estimate the size of a widget with spans hSpan, vSpan. return MAX_VALUE for each
     // dimension if unsuccessful
-    public int[] estimateItemSize(int hSpan, int vSpan,
+    /**计算Item所占的矩形的大小(像素表示),返回数组中包含宽度和高度*/
+    public int[] estimateItemSize(int hSpan, int vSpan,//提供了这两个参数后,可以不要参数ItemInfo了
             ItemInfo itemInfo, boolean springLoaded) {
         int[] size = new int[2];
         if (getChildCount() > 0) {
@@ -375,6 +379,9 @@ public class Workspace extends SmoothPagedView
             return size;
         }
     }
+    
+    /**计算Item在屏幕中的矩形位置*/
+    //这个传进去的参数ItemInfo怎么没有用?因为已经提供了后面四个参数,可以决定它的尺寸范围.
     public Rect estimateItemPosition(CellLayout cl, ItemInfo pendingInfo,
             int hCell, int vCell, int hSpan, int vSpan) {
         Rect r = new Rect();

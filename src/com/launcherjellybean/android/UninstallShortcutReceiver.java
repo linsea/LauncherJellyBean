@@ -33,11 +33,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+/**
+ * 删除快捷方式的BroadcastReceiver
+ *
+ */
 public class UninstallShortcutReceiver extends BroadcastReceiver {
     private static final String ACTION_UNINSTALL_SHORTCUT =
             "com.android.launcher.action.UNINSTALL_SHORTCUT";
 
     // The set of shortcuts that are pending uninstall
+    //为了保持数据同步,在某些时候真正删除之前,要先进入删除列表
     private static ArrayList<PendingUninstallShortcutInfo> mUninstallQueue =
             new ArrayList<PendingUninstallShortcutInfo>();
 
@@ -115,7 +120,7 @@ public class UninstallShortcutReceiver extends BroadcastReceiver {
                         if (intent.filterEquals(Intent.parseUri(c.getString(intentIndex), 0))) {
                             final long id = c.getLong(idIndex);
                             final Uri uri = LauncherSettings.Favorites.getContentUri(id, false);
-                            cr.delete(uri, null, null);
+                            cr.delete(uri, null, null);//删除DB中的数据
                             changed = true;
                             if (!duplicate) {
                                 break;

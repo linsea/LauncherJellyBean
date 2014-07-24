@@ -133,6 +133,7 @@ public class CellLayout extends ViewGroup {
     private boolean mDragging = false;
 
     private TimeInterpolator mEaseOutInterpolator;
+    //CellLayout中仅此一个孩子,所有的图标其实都在它里面
     private ShortcutAndWidgetContainer mShortcutsAndWidgets;
 
     private boolean mIsHotseat = false;

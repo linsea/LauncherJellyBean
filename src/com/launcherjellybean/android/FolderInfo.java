@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import android.content.ContentValues;
 
 /**
+ * ItemInfo的子类,文件夹信息的封装,它里面包含放入此文件夹的快捷方式的列表和监听它变化的监听器们.
+ * 当文件夹变化时(如增加/删除它里面的快捷方式),它会主动通知它的监听器们.
  * Represents a folder containing shortcuts or apps.
  */
 class FolderInfo extends ItemInfo {
@@ -40,6 +42,7 @@ class FolderInfo extends ItemInfo {
      */
     ArrayList<ShortcutInfo> contents = new ArrayList<ShortcutInfo>();
 
+    /**监听此文件夹变化的监听器们*/
     ArrayList<FolderListener> listeners = new ArrayList<FolderListener>();
 
     FolderInfo() {
