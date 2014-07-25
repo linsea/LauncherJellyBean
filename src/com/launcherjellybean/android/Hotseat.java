@@ -36,7 +36,7 @@ public class Hotseat extends FrameLayout {
 
     private int mCellCountX;
     private int mCellCountY;
-    private int mAllAppsButtonRank;
+    private int mAllAppsButtonRank;//AllAppsButton排列在Hotseat的第几个位置,即位置索引.
     private boolean mIsLandscape;
 
     public Hotseat(Context context) {

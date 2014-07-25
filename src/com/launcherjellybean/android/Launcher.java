@@ -810,6 +810,7 @@ public final class Launcher extends Activity
     }
 
     /**
+     * 根据之前保存的状态变量,重建某些内容,使应用处于之前的状态.
      * Restores the previous state, if it exists.
      *
      * @param savedState The previous state.
@@ -820,7 +821,7 @@ public final class Launcher extends Activity
         }
 
         State state = intToState(savedState.getInt(RUNTIME_STATE, State.WORKSPACE.ordinal()));
-        if (state == State.APPS_CUSTOMIZE) {
+        if (state == State.APPS_CUSTOMIZE) {//如果是处于AllApps页
             showAllApps(false);
         }
 
@@ -1377,11 +1378,11 @@ public final class Launcher extends Activity
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        // Do not call super here
+        // Do not call super here  //为什么???
         mSavedInstanceState = savedInstanceState;
     }
 
-    @Override
+    @Override//把一些状态的基本变量写入保存起来.
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt(RUNTIME_STATE_CURRENT_SCREEN, mWorkspace.getCurrentPage());
         super.onSaveInstanceState(outState);

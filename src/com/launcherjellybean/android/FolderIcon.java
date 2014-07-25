@@ -612,11 +612,12 @@ public class FolderIcon extends LinearLayout implements FolderListener {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         // Call the superclass onTouchEvent first, because sometimes it changes the state to
-        // isPressed() on an ACTION_UP
+        // isPressed() on an ACTION_UP,有时ACTION_UP是指取消按下.如先按下然后滑动一段距离,然后抬起手指
         boolean result = super.onTouchEvent(event);
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+              //如果这个View有LongPressListener,而且按下时间够长,是不是就要执行两次回调?(一次是系统调用它)
                 mLongPressHelper.postCheckForLongPress();
                 break;
             case MotionEvent.ACTION_CANCEL:
