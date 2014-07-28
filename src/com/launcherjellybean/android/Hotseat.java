@@ -69,12 +69,12 @@ public class Hotseat extends FrameLayout {
     }
 
     /* Get the orientation invariant order of the item in the hotseat for persistence. */
-    int getOrderInHotseat(int x, int y) {
+    int getOrderInHotseat(int x, int y) {//如果为竖屏,则为指定的第x列
         return mIsLandscape ? (mContent.getCountY() - y - 1) : x;
     }
     /* Get the orientation specific coordinates given an invariant order in the hotseat. */
     int getCellXFromOrder(int rank) {
-        return mIsLandscape ? 0 : rank;
+        return mIsLandscape ? 0 : rank;//横屏时AllApps按钮始终为第0个位置
     }
     int getCellYFromOrder(int rank) {
         return mIsLandscape ? (mContent.getCountY() - (rank + 1)) : 0;

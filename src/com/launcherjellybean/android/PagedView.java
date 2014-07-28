@@ -110,7 +110,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     protected final static int TOUCH_STATE_NEXT_PAGE = 3;
     protected final static float ALPHA_QUANTIZE_LEVEL = 0.0001f;
 
-    protected int mTouchState = TOUCH_STATE_REST;//当前的触摸状态
+    protected int mTouchState = TOUCH_STATE_REST;//当前触摸的操作使之处于什么运动状态
     protected boolean mForceScreenScrolled = false;
 
     protected OnLongClickListener mLongClickListener;

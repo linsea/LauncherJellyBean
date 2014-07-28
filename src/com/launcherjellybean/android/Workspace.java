@@ -429,8 +429,8 @@ public class Workspace extends SmoothPagedView
         Launcher.setScreen(mCurrentPage);
         LauncherApplication app = (LauncherApplication)context.getApplicationContext();
         mIconCache = app.getIconCache();
-        setWillNotDraw(false);
-        setChildrenDrawnWithCacheEnabled(true);
+        setWillNotDraw(false);//用于指示视图绘制时优化时用的,一般是ViewGroup时设置,因为它只是一个容器不用画自己.
+        setChildrenDrawnWithCacheEnabled(true);//主要用与scrolling or animating时优化.
 
         final Resources res = getResources();
         try {
@@ -495,6 +495,7 @@ public class Workspace extends SmoothPagedView
         return null;
     }
 
+    /**即当前Workspace被用户操作激活了,处于一定的运动状态吗?*/
     boolean isTouchActive() {
         return mTouchState != TOUCH_STATE_REST;
     }
@@ -536,14 +537,14 @@ public class Workspace extends SmoothPagedView
             }
         }
 
-        final CellLayout layout;
+        final CellLayout layout;//workspace的Children必须是CellLayout
         if (container == LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
             layout = mLauncher.getHotseat().getLayout();
-            child.setOnKeyListener(null);
+            child.setOnKeyListener(null);//设置当在View上按手机硬件的键时不响应
 
             // Hide folder title in the hotseat
             if (child instanceof FolderIcon) {
-                ((FolderIcon) child).setTextVisible(false);
+                ((FolderIcon) child).setTextVisible(false);//Hotseat上不显示图标的文字
             }
 
             if (screen < 0) {
@@ -554,7 +555,7 @@ public class Workspace extends SmoothPagedView
                 x = mLauncher.getHotseat().getCellXFromOrder(screen);
                 y = mLauncher.getHotseat().getCellYFromOrder(screen);
             }
-        } else {
+        } else {//添加到Workspace的CellLayout上
             // Show folder title if not in the hotseat
             if (child instanceof FolderIcon) {
                 ((FolderIcon) child).setTextVisible(true);
@@ -564,6 +565,7 @@ public class Workspace extends SmoothPagedView
             child.setOnKeyListener(new IconKeyEventListener());
         }
 
+        //这一段设置View的布局参数:CellLayout.LayoutParams
         LayoutParams genericLp = child.getLayoutParams();
         CellLayout.LayoutParams lp;
         if (genericLp == null || !(genericLp instanceof CellLayout.LayoutParams)) {
@@ -582,6 +584,7 @@ public class Workspace extends SmoothPagedView
 
         // Get the canonical child id to uniquely represent this view in this screen
         int childId = LauncherModel.getCellLayoutChildId(container, screen, x, y, spanX, spanY);
+      //如果是文件夹,那么这个位置不会被标记为已占用状态,因为图标是可以拖到这个位置,然后放进文件夹里面的.
         boolean markCellsAsOccupied = !(child instanceof Folder);
         if (!layout.addViewToCellLayout(child, insert ? 0 : -1, childId, lp, markCellsAsOccupied)) {
             // TODO: This branch occurs when the workspace is adding views
@@ -592,10 +595,10 @@ public class Workspace extends SmoothPagedView
 
         if (!(child instanceof Folder)) {
             child.setHapticFeedbackEnabled(false);
-            child.setOnLongClickListener(mLongClickListener);
+            child.setOnLongClickListener(mLongClickListener);//设置长按监听器
         }
         if (child instanceof DropTarget) {
-            mDragController.addDropTarget((DropTarget) child);
+            mDragController.addDropTarget((DropTarget) child);//设置拖动控制器
         }
     }
 
