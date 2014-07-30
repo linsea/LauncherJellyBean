@@ -62,6 +62,9 @@ import java.util.List;
 /**
  * 全局的Model对象,"Model" of MVC pattern,负责加载数据到内存,同时内存中保存一份数据库中数据的拷贝.
  * 修改Model数据时,也会同步修改数据库中的数据,使两者数据保持一致性.
+ * 注意:里面有几个静态的保存ItemInfo的列表,它们"实时地"反映了系统当前的应用状态,随时可能变化,所以在某些需要遍历这些
+ * 列表时,需要拷贝一份列表中的引用到一个新的列表中,然后遍历时用这个新的列表.(只需要引用,即有点像是影子拷贝,
+ * 并没有真正创建新的对象.)
  * 
  * 此类最重要的逻辑在LoaderTask中,它里面的主要方法是loadWorkspace(),bindWorkspace().
  * 
@@ -74,10 +77,10 @@ public class LauncherModel extends BroadcastReceiver {
     static final boolean DEBUG_LOADERS = false;
     static final String TAG = "Launcher.Model";
 
-    private static final int ITEMS_CHUNK = 6; // batch size for the workspace icons
+    private static final int ITEMS_CHUNK = 6; //每批次加载到桌面的个数. batch size for the workspace icons
     private final boolean mAppsCanBeOnExternalStorage;
     private int mBatchSize; // 0 is all apps at once
-    private int mAllAppsLoadDelay; // milliseconds between batches
+    private int mAllAppsLoadDelay; // milliseconds between batches,每加载一批应用到缓存后睡眠的时间
 
     private final LauncherApplication mApp;
     private final Object mLock = new Object();
@@ -180,7 +183,7 @@ public class LauncherModel extends BroadcastReceiver {
         });
     }
 
-    /** Unbinds all the sWorkspaceItems on the main thread, and return a copy of sWorkspaceItems
+    /** 解绑. Unbinds all the sWorkspaceItems on the main thread, and return a copy of sWorkspaceItems
      * that is save to reference from the main thread. */
     private ArrayList<ItemInfo> unbindWorkspaceItemsOnMainThread() {
         // Ensure that we don't use the same workspace items data structure on the main thread
@@ -925,7 +928,8 @@ public class LauncherModel extends BroadcastReceiver {
                 }
             }
         }
-
+        
+        /**强制结束,中断加载线程.*/
         public void stopLocked() {
             synchronized (LoaderTask.this) {
                 mStopped = true;
@@ -1286,6 +1290,7 @@ public class LauncherModel extends BroadcastReceiver {
         }
 
         /**
+         * 绑定Workspace,注意前提是已经从DB中加载了所有的Item到内存列表中.
          * Read everything out of our database.
          */
         private void bindWorkspace() {
@@ -1320,12 +1325,12 @@ public class LauncherModel extends BroadcastReceiver {
                 }
             });
             // Precondition: the items are ordered by page, screen
-            final ArrayList<ItemInfo> workspaceItems = new ArrayList<ItemInfo>();
+            final ArrayList<ItemInfo> workspaceItems = new ArrayList<ItemInfo>();//构造新的workspaceItems
             for (ItemInfo ii : tmpWorkspaceItems) {
                 // Prepend the current items, hotseat items, append everything else
                 if (ii.container == LauncherSettings.Favorites.CONTAINER_DESKTOP &&
                         ii.screen == currentScreen) {
-                    workspaceItems.add(0, ii);
+                    workspaceItems.add(0, ii);//插入到列表的最前面
                 } else if (ii.container == LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
                     workspaceItems.add(0, ii);
                 } else {
@@ -1345,6 +1350,7 @@ public class LauncherModel extends BroadcastReceiver {
 
             // Add the items to the workspace.
             int N = workspaceItems.size();
+          //这里为什么也要分批次加载呢?难道是怕消息队列里一次处理的Runnable工作过重?
             for (int i=0; i<N; i+=ITEMS_CHUNK) {
                 final int start = i;
                 final int chunkSize = (i+ITEMS_CHUNK <= N) ? ITEMS_CHUNK : (N-i);
@@ -1385,12 +1391,12 @@ public class LauncherModel extends BroadcastReceiver {
             // once for the current screen
             for (int i=0; i<N; i++) {
                 final LauncherAppWidgetInfo widget = sAppWidgets.get(i);
-                if (widget.screen == currentScreen) {
+                if (widget.screen == currentScreen) {//优先绑定当前屏幕的
                     mHandler.post(new Runnable() {
                         public void run() {
                             Callbacks callbacks = tryGetCallbacks(oldCallbacks);
                             if (callbacks != null) {
-                                callbacks.bindAppWidget(widget);
+                                callbacks.bindAppWidget(widget);//每次只绑定一个Widget
                             }
                         }
                     });
@@ -1399,7 +1405,7 @@ public class LauncherModel extends BroadcastReceiver {
             // once for the other screens
             for (int i=0; i<N; i++) {
                 final LauncherAppWidgetInfo widget = sAppWidgets.get(i);
-                if (widget.screen != currentScreen) {
+                if (widget.screen != currentScreen) {//然后绑定其他屏幕的
                     mHandler.post(new Runnable() {
                         public void run() {
                             Callbacks callbacks = tryGetCallbacks(oldCallbacks);
@@ -1450,6 +1456,7 @@ public class LauncherModel extends BroadcastReceiver {
             }
         }
 
+        /**回调绑定所有App,注意:前提是所有App已经加载到内存中.*/
         private void onlyBindAllApps() {
             final Callbacks oldCallbacks = mCallbacks.get();
             if (oldCallbacks == null) {
@@ -1478,6 +1485,7 @@ public class LauncherModel extends BroadcastReceiver {
 
         }
 
+        /**从系统中查询出所有应用,批量加载App应用列表到缓存中*/
         private void loadAllAppsByBatch() {
             final long t = DEBUG_LOADERS ? SystemClock.uptimeMillis() : 0;
 
@@ -1502,7 +1510,7 @@ public class LauncherModel extends BroadcastReceiver {
             int i=0;
             int batchSize = -1;
             while (i < N && !mStopped) {
-                if (i == 0) {
+                if (i == 0) {//第一次查询出所有的应用
                     mAllAppsList.clear();
                     final long qiaTime = DEBUG_LOADERS ? SystemClock.uptimeMillis() : 0;
                     //查询所有应该在桌面上显示的app  
@@ -1540,26 +1548,30 @@ public class LauncherModel extends BroadcastReceiver {
                 final long t2 = DEBUG_LOADERS ? SystemClock.uptimeMillis() : 0;
 
                 startIndex = i;
-                for (int j=0; i<N && j<batchSize; j++) {//添加一批应用信息到mAllAppsList，每一批添加N个  
+                
+                //添加一批应用信息到mAllAppsList，每一批添加mBatchSize个  
+                //这里有一个小技巧:外层的循环while有检查mStopped是否为true,
+                //如果其他线程要求中断加载过程,则可以在某批次的应用加载完后就中断,而不用等全部加载完.
+                for (int j = 0; i < N && j < batchSize; j++) {
                     // This builds the icon bitmaps.
                     mAllAppsList.add(new ApplicationInfo(packageManager, apps.get(i),
                             mIconCache, mLabelCache));
-                    i++;
+                    i++;// 这里i记录所有应用中,加载了的index.
                 }
 
-                final boolean first = i <= batchSize;//i < batchSize表示添加的是第一批信息  
+                final boolean first = i <= batchSize;//i <= batchSize表示添加的是第一批信息  
                 final Callbacks callbacks = tryGetCallbacks(oldCallbacks);
                 final ArrayList<ApplicationInfo> added = mAllAppsList.added;
-                mAllAppsList.added = new ArrayList<ApplicationInfo>();//每添加完一批之后，将added重新清空  
+                mAllAppsList.added = new ArrayList<ApplicationInfo>();//每添加完一批之后，相当于将added重新清空  
 
                 mHandler.post(new Runnable() {
                     public void run() {
                         final long t = SystemClock.uptimeMillis();
                         if (callbacks != null) {//Launcher实现了Callbacks接口，将获取到的数据回调给Launcher  
                             if (first) {
-                                callbacks.bindAllApplications(added);
+                                callbacks.bindAllApplications(added);//第一批次的应用
                             } else {
-                                callbacks.bindAppsAdded(added);
+                                callbacks.bindAppsAdded(added);//其他批次的应用
                             }
                             if (DEBUG_LOADERS) {
                                 Log.d(TAG, "bound " + added.size() + " apps in "
@@ -1576,7 +1588,7 @@ public class LauncherModel extends BroadcastReceiver {
                             + (SystemClock.uptimeMillis()-t2) + "ms");
                 }
 
-                if (mAllAppsLoadDelay > 0 && i < N) {
+                if (mAllAppsLoadDelay > 0 && i < N) {//每加载完一批后,这里睡一会儿
                     try {
                         if (DEBUG_LOADERS) {
                             Log.d(TAG, "sleeping for " + mAllAppsLoadDelay + "ms");
@@ -2128,6 +2140,8 @@ public class LauncherModel extends BroadcastReceiver {
             return new ComponentName(info.serviceInfo.packageName, info.serviceInfo.name);
         }
     }
+    
+    /**将获取到的app的信息按名字进行排序,并且把它们的ComponentName->Label缓存到Map中  */
     public static class ShortcutNameComparator implements Comparator<ResolveInfo> {
         private PackageManager mPackageManager;
         private HashMap<Object, CharSequence> mLabelCache;

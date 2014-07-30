@@ -144,7 +144,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     // parameter that adjusts the layout to be optimized for pages with that scale factor
     protected float mLayoutScale = 1.0f;
 
-    protected static final int INVALID_POINTER = -1;
+    protected static final int INVALID_POINTER = -1;//无效的手指
 
     protected int mActivePointerId = INVALID_POINTER;
 
@@ -238,6 +238,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
+      //滑动超过此距离尺寸,则认为是想滑动一页
         mPagingTouchSlop = configuration.getScaledPagingTouchSlop();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
         mDensity = getResources().getDisplayMetrics().density;
@@ -930,13 +931,14 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         return  (x > (getMeasuredWidth() - getRelativeChildOffset(mCurrentPage) + mPageSpacing));
     }
 
-    @Override
+    @Override//拦截动作,负责左右滑动屏幕
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         /*
          * This method JUST determines whether we want to intercept the motion.
          * If we return true, onTouchEvent will be called and we do the actual
          * scrolling there.
          */
+      //获取速度跟踪器，记录各个时刻的速度。并且添加当前的MotionEvent以记录更行速度值。
         acquireVelocityTrackerAndAddMovement(ev);
 
         // Skip touch handling if there are no pages to swipe
@@ -964,12 +966,10 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                  */
             	 /** 
             	  * 当在这里接受到ACTION_MOVE时，说明mTouchState!=TOUCH_STATE_SCROLLING
-            	  * 并且mIsBeingDragged的值应该为false， 
-            	  * 否则DragLayer就应该截获了MotionEvent用于实现拖拽。 
-            	  * 此时还没有进入滑动状态，当mActivePointerId == INVALID_POINTER时，
-            	  * 也就是在此之前没有接收到任何touch事件。 
-            	  * 这种情况发生在Workspace变小时，也就是之前Workspace处于SPRING_LOADED状态。
-            	  * 当出现这种情况时直接把当前的事件当作ACTION_DOWN进行处理。 
+            	  * 并且mIsBeingDragged的值应该为false，否则DragLayer就应该截获了MotionEvent用于实现拖拽。 
+            	  * 此时还没有进入滑动状态，当mActivePointerId == INVALID_POINTER时，也就是在此之前没有
+            	  * 接收到任何touch事件。这种情况发生在Workspace变小时，也就是之前Workspace处于
+            	  * SPRING_LOADED状态。 当出现这种情况时直接把当前的事件当作ACTION_DOWN进行处理。 
             	  * 反之，则通过determineScrollingStart()尝试能够进入滑动状态。 
             	  * 
             	  * (SPRING_LOADED状态是指在All Apps页面长按一个应用,然后进入到桌面的状态.)
@@ -1063,6 +1063,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     }
 
     /*
+     * 如果用户移动手指很快,用这个方法来决定我们是否需要改变触摸的状态,以启动滑动.
+     * 参数touchSlopScale是指一(滑动)距离,放大/缩小的因子.
      * Determines if we should change the touch state to start scrolling after the
      * user moves their touch point too far.
      */
@@ -1081,7 +1083,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         final int yDiff = (int) Math.abs(y - mLastMotionY);
 
         final int touchSlop = Math.round(touchSlopScale * mTouchSlop);
-        boolean xPaged = xDiff > mPagingTouchSlop;
+        boolean xPaged = xDiff > mPagingTouchSlop;//是否可以认为是滑动了一页
         boolean xMoved = xDiff > touchSlop;
         boolean yMoved = yDiff > touchSlop;
 
@@ -1089,7 +1091,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             if (mUsePagingTouchSlop ? xPaged : xMoved) {
                 // Scroll if the user moved far enough along the X axis
                 mTouchState = TOUCH_STATE_SCROLLING;
-                mTotalMotionX += Math.abs(mLastMotionX - x);
+                mTotalMotionX += Math.abs(mLastMotionX - x);//X轴方向上的位移和
                 mLastMotionX = x;
                 mLastMotionXRemainder = 0;
                 mTouchX = getScrollX();
@@ -1097,7 +1099,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                 pageBeginMoving();
             }
             // Either way, cancel any pending longpress
-            cancelCurrentPageLongPress();
+            cancelCurrentPageLongPress();//取消所在潜在的可能的长按事件
         }
     }
 

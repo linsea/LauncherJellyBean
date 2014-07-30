@@ -602,7 +602,7 @@ public class Workspace extends SmoothPagedView
         }
     }
 
-    /**
+    /**reach here
      * Check if the point (x, y) hits a given page.
      */
     private boolean hitsPage(int index, float x, float y) {
