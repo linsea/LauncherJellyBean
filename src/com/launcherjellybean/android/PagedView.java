@@ -970,7 +970,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             	  * 此时还没有进入滑动状态，当mActivePointerId == INVALID_POINTER时，也就是在此之前没有
             	  * 接收到任何touch事件。这种情况发生在Workspace变小时，也就是之前Workspace处于
             	  * SPRING_LOADED状态。 当出现这种情况时直接把当前的事件当作ACTION_DOWN进行处理。 
-            	  * 反之，则通过determineScrollingStart()尝试能够进入滑动状态。 
+            	  * 反之，则通过determineScrollingStart()尝试能否进入滑动状态。 
             	  * 
             	  * (SPRING_LOADED状态是指在All Apps页面长按一个应用,然后进入到桌面的状态.)
             	  */  
@@ -989,8 +989,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                 final float x = ev.getX();
                 final float y = ev.getY();
                 // Remember location of down touch
-                mDownMotionX = x;
-                mLastMotionX = x;
+                mDownMotionX = x;//记录按下的x的坐标值  
+                mLastMotionX = x;//记录前次发生touch时的坐标  
                 mLastMotionY = y;
                 
                 //因为在ScrollBy时只能使用int，而记录的x和y都是float，会产生误差，
@@ -1037,7 +1037,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                mTouchState = TOUCH_STATE_REST;
+                mTouchState = TOUCH_STATE_REST; //不需要拦截这两种动作
                 mAllowLongPress = false;
                 mActivePointerId = INVALID_POINTER;
                 releaseVelocityTracker();
@@ -1053,7 +1053,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
          * The only time we want to intercept motion events is if we are in the
          * drag mode.
          * 只有进入了滑动状态，才进行拦截，进入onTouchEvent执行滑动操作。
-         * 当mTouchState != TOUCH_STATE_REST时，就说明没有进入滑动状态。 
+         * 当mTouchState != TOUCH_STATE_REST时，就说明进入滑动状态。 
          */
         return mTouchState != TOUCH_STATE_REST;
     }
@@ -1099,7 +1099,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                 pageBeginMoving();
             }
             // Either way, cancel any pending longpress
-            cancelCurrentPageLongPress();//取消所在潜在的可能的长按事件
+            cancelCurrentPageLongPress();//取消所有潜在的可能的长按事件
         }
     }
 
@@ -1197,7 +1197,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         return OVERSCROLL_DAMP_FACTOR * f;
     }
 
-    @Override
+    @Override//执行各种关于滑动的工作的计算，界面的刷新等工作。
     public boolean onTouchEvent(MotionEvent ev) {
         // Skip touch handling if there are no pages to swipe
         if (getChildCount() <= 0) return super.onTouchEvent(ev);
@@ -1211,7 +1211,9 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             /*
              * If being flinged and user touches, stop the fling. isFinished
              * will be false if being flinged.
-             */
+             * 如果Workspace此时已经被“掷出去”（靠惯性滑动）。 
+             * 此时发生ACTION_DOWN则需要停止滑动。 
+             */  
             if (!mScroller.isFinished()) {
                 mScroller.abortAnimation();
             }
@@ -1222,7 +1224,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             mTotalMotionX = 0;
             mActivePointerId = ev.getPointerId(0);
             if (mTouchState == TOUCH_STATE_SCROLLING) {
-                pageBeginMoving();
+                pageBeginMoving();//这里应该停止,为什么是开始滑动??
             }
             break;
 
@@ -1242,7 +1244,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                     mTouchX += deltaX;
                     mSmoothingTime = System.nanoTime() / NANOTIME_DIV;
                     if (!mDeferScrollUpdate) {
-                        scrollBy((int) deltaX, 0);
+                        scrollBy((int) deltaX, 0);//滑动桌面
                         if (DEBUG) Log.d(TAG, "onTouchEvent().Scrolling: " + deltaX);
                     } else {
                         invalidate();
@@ -1250,7 +1252,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                     mLastMotionX = x;
                     mLastMotionXRemainder = deltaX - (int) deltaX;
                 } else {
-                    awakenScrollBars();
+                    awakenScrollBars();//使scrollbar慢慢显示出来
                 }
             } else {
                 determineScrollingStart(ev);
