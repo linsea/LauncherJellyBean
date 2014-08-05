@@ -2205,7 +2205,7 @@ public final class Launcher extends Activity
         if (mState != State.WORKSPACE) return false;
 
         if (!(v instanceof CellLayout)) {
-            v = (View) v.getParent().getParent();
+            v = (View) v.getParent().getParent();//获取到CellLayout
         }
 
         resetAddInfo();
@@ -2216,17 +2216,18 @@ public final class Launcher extends Activity
         }
 
         // The hotseat touch handling does not go through Workspace, and we always allow long press
-        // on hotseat items.
+        // on hotseat items. 在Hotseat上长按永远都有效
         final View itemUnderLongClick = longClickCellInfo.cell;
         boolean allowLongPress = isHotseatLayout(v) || mWorkspace.allowLongPress();
-        if (allowLongPress && !mDragController.isDragging()) {
+        if (allowLongPress && !mDragController.isDragging()) {//允许长按且之前的状态并非拖动中
             if (itemUnderLongClick == null) {
                 // User long pressed on empty space
+                //忽略这个视图的触感反馈设置,当长按时总是执行触感反馈,比如振动一下.
                 mWorkspace.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS,
                         HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
-                startWallpaper();
+                startWallpaper();//在空的地方长按而弹出设置墙纸对话框
             } else {
-                if (!(itemUnderLongClick instanceof Folder)) {
+                if (!(itemUnderLongClick instanceof Folder)) {//不是文件夹,如果是呢???
                     // User long pressed on an item
                     mWorkspace.startDrag(longClickCellInfo);
                 }

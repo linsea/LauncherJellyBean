@@ -1825,7 +1825,7 @@ public class Workspace extends SmoothPagedView
         Bitmap b;
 
         if (v instanceof TextView) {
-            Drawable d = ((TextView) v).getCompoundDrawables()[1];
+            Drawable d = ((TextView) v).getCompoundDrawables()[1];//android:drawableTop上的图
             b = Bitmap.createBitmap(d.getIntrinsicWidth() + padding,
                     d.getIntrinsicHeight() + padding, Bitmap.Config.ARGB_8888);
         } else {
@@ -1888,21 +1888,25 @@ public class Workspace extends SmoothPagedView
         View child = cellInfo.cell;
 
         // Make sure the drag was started by a long press as opposed to a long click.
-        if (!child.isInTouchMode()) {
+        if (!child.isInTouchMode()) {//设备是否处于Touch模式
             return;
         }
 
         mDragInfo = cellInfo;
-        child.setVisibility(INVISIBLE);
+        //使图标从桌面上消失，给人一种被“拖到空中”的感觉 
+        child.setVisibility(INVISIBLE);//使被拖动的图标不可视
         CellLayout layout = (CellLayout) child.getParent().getParent();
-        layout.prepareChildForDrag(child);
+        layout.prepareChildForDrag(child);//使被拖动的图标所在的格式标记为没有占用
 
-        child.clearFocus();
-        child.setPressed(false);
+        child.clearFocus();//这个图标不可见了,那么它不应该还有焦点.
+        child.setPressed(false);//设置它的按下状态为false
 
         final Canvas canvas = new Canvas();
 
         // The outline is used to visualize where the item will land if dropped
+        //创建一个外边框视图,以标志释放图标时它将放置的位置
+        //图标的轮廓，在桌面上的对应的位置绘制图标的轮廓，显示当手松开图标时它在桌面上的落点
+        //创建一个Bitmap的示例:
         mDragOutline = createDragOutline(child, canvas, DRAG_BITMAP_PADDING);
         beginDragShared(child, this);
     }
@@ -1916,6 +1920,7 @@ public class Workspace extends SmoothPagedView
         Resources r = getResources();
 
         // The drag bitmap follows the touch point around on the screen
+        //创建一个新图标,这个图标将随着手指的拖动而移动.
         final Bitmap b = createDragBitmap(child, new Canvas(), DRAG_BITMAP_PADDING);
 
         final int bmpWidth = b.getWidth();

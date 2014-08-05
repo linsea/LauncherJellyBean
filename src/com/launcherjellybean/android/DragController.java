@@ -268,7 +268,7 @@ public class DragController {
 
         mVibrator.vibrate(VIBRATE_DURATION);//开始拖动时,振动一下.
         
-        //开始画被拖动对象的一个外部轮廓
+        //开始画被拖动对象的视图
         final DragView dragView = mDragObject.dragView = new DragView(mLauncher, b, registrationX,
                 registrationY, 0, 0, b.getWidth(), b.getHeight(), initialDragViewScale);
 

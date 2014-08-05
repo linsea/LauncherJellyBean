@@ -248,12 +248,13 @@ public class DragView extends View {
      * @param touchY the y coordinate the user touched in DragLayer coordinates
      */
     public void show(int touchX, int touchY) {
-        mDragLayer.addView(this);
+        mDragLayer.addView(this);//将DragView添加到DragLayer中  
 
         // Enable hw-layers on this view
         setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         // Start the pick-up animation
+        //设置位置、尺寸等信息  
         DragLayer.LayoutParams lp = new DragLayer.LayoutParams(0, 0);
         lp.width = mBitmap.getWidth();
         lp.height = mBitmap.getHeight();

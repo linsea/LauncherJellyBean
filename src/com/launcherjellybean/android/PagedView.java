@@ -64,7 +64,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     protected static final float NANOTIME_DIV = 1000000000.0f;
 
     private static final float OVERSCROLL_ACCELERATE_FACTOR = 2;
-    private static final float OVERSCROLL_DAMP_FACTOR = 0.14f;
+    private static final float OVERSCROLL_DAMP_FACTOR = 0.14f;//滑到顶时的阻尼系数.
 
     private static final float RETURN_TO_ORIGINAL_PAGE_THRESHOLD = 0.33f;
     // The page is moved more than halfway, automatically move to the next page on touch up.
@@ -996,7 +996,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                 //因为在ScrollBy时只能使用int，而记录的x和y都是float，会产生误差，
                 //故这里用mLastMotionXRemainder记录余数用于消除误差  
                 mLastMotionXRemainder = 0;
-                mTotalMotionX = 0;//x方向上的总位移  
+                mTotalMotionX = 0;//手指多次采样后x方向上的总位移  
                 mActivePointerId = ev.getPointerId(0);
                 
                 
@@ -1225,18 +1225,22 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             mActivePointerId = ev.getPointerId(0);
             if (mTouchState == TOUCH_STATE_SCROLLING) {
                 pageBeginMoving();//这里应该停止,为什么是开始滑动??
+                //因为上面abortAnimation就是停止,但此时手指还是按下状态,可以滑动的,所以要准备开始移动
             }
             break;
 
         case MotionEvent.ACTION_MOVE:
-            if (mTouchState == TOUCH_STATE_SCROLLING) {
+            if (mTouchState == TOUCH_STATE_SCROLLING) {//如果已经在滑动状态中了,则继续滑动
                 // Scroll to follow the motion event
                 final int pointerIndex = ev.findPointerIndex(mActivePointerId);
                 final float x = ev.getX(pointerIndex);
                 final float deltaX = mLastMotionX + mLastMotionXRemainder - x;
 
+                //一次滑动会有很多次数据采样(也即这个方法会被调用很多次),这里把每次采样手指移动的距离累加起来.
+                //这样才能知道一次完整的滑动移动了多长距离
                 mTotalMotionX += Math.abs(deltaX);
 
+                //仅当不连续地滑动时才更新mLastMotionX的值
                 // Only scroll and update mLastMotionX if we have moved some discrete amount.  We
                 // keep the remainder because we are actually testing if we've moved from the last
                 // scrolled position (which is discrete).
@@ -1244,7 +1248,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                     mTouchX += deltaX;
                     mSmoothingTime = System.nanoTime() / NANOTIME_DIV;
                     if (!mDeferScrollUpdate) {
-                        scrollBy((int) deltaX, 0);//滑动桌面
+                        scrollBy((int) deltaX, 0);//滑动桌面,基于手指移动的距离
                         if (DEBUG) Log.d(TAG, "onTouchEvent().Scrolling: " + deltaX);
                     } else {
                         invalidate();
@@ -1252,10 +1256,10 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                     mLastMotionX = x;
                     mLastMotionXRemainder = deltaX - (int) deltaX;
                 } else {
-                    awakenScrollBars();//使scrollbar慢慢显示出来
+                    awakenScrollBars();//移动的距离不够,没有滑动,但使scrollbar慢慢显示出来
                 }
             } else {
-                determineScrollingStart(ev);
+                determineScrollingStart(ev);//非滑动状态,测试是否需要改变触摸的状态,以启动滑动
             }
             break;
 
@@ -1273,7 +1277,9 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                         SIGNIFICANT_MOVE_THRESHOLD;
 
                 mTotalMotionX += Math.abs(mLastMotionX + mLastMotionXRemainder - x);
-
+                
+                //当速率超过snapVelocity,并且总的移动距离超过MIN_LENGTH_FOR_FLING  
+                //则判定isFling=true
                 boolean isFling = mTotalMotionX > MIN_LENGTH_FOR_FLING &&
                         Math.abs(velocityX) > mFlingThresholdVelocity;
 
@@ -1287,6 +1293,8 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                 }
 
                 int finalPage;
+                //快速滑动(fling)动作的优先级比大距离移动的动作更高.比如,向左移动一大段距离,然后突然向右快速
+                //滑动(fling),我们将忽略向左的移动,而认为仅向右快速滑动(fling)是有效的.
                 // We give flings precedence over large moves, which is why we short-circuit our
                 // test for a large move if a fling has been registered. That is, a large
                 // move to the left and fling to the right will register as a fling to the right.
@@ -1325,21 +1333,21 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
             } else {
                 onUnhandledTap(ev);
             }
-            mTouchState = TOUCH_STATE_REST;
-            mActivePointerId = INVALID_POINTER;
+            mTouchState = TOUCH_STATE_REST;//标记为没有动作了
+            mActivePointerId = INVALID_POINTER;//手指运动完了
             releaseVelocityTracker();
             break;
 
-        case MotionEvent.ACTION_CANCEL:
+        case MotionEvent.ACTION_CANCEL://取消动作,焦点交给父容器视图
             if (mTouchState == TOUCH_STATE_SCROLLING) {
-                snapToDestination();
+                snapToDestination();//自动滑动到距离屏幕中央最近的那一页
             }
-            mTouchState = TOUCH_STATE_REST;
+            mTouchState = TOUCH_STATE_REST;//作标记
             mActivePointerId = INVALID_POINTER;
             releaseVelocityTracker();
             break;
 
-        case MotionEvent.ACTION_POINTER_UP:
+        case MotionEvent.ACTION_POINTER_UP://其他手指抬起
             onSecondaryPointerUp(ev);
             break;
         }
@@ -1443,6 +1451,7 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
         return (minWidth > measuredWidth) ? minWidth : measuredWidth;
     }
 
+    /**返回距离屏幕中央最近的那一页*/
     int getPageNearestToCenterOfScreen() {
         int minDistanceFromScreenCenter = Integer.MAX_VALUE;
         int minDistanceFromScreenCenterIndex = -1;

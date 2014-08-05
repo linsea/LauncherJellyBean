@@ -249,7 +249,7 @@ public class BubbleTextView extends TextView {
     }
 
     /**如果BubbleText已经绘制了mPressedOrFocusedBackground,则使自己在屏幕上(实际是CellLayout)
-     * 上无效,然后重绘,以显示动画效果.*/
+     * 无效,然后重绘,以显示动画效果.*/
     void setCellLayoutPressedOrFocusedIcon() {
         if (getParent() instanceof ShortcutAndWidgetContainer) {
             ShortcutAndWidgetContainer parent = (ShortcutAndWidgetContainer) getParent();
