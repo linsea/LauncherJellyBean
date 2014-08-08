@@ -185,7 +185,7 @@ public class Workspace extends SmoothPagedView
     private float mOverscrollFade = 0;
     private boolean mOverscrollTransformsSet;
     public static final int DRAG_BITMAP_PADDING = 2;
-    private boolean mWorkspaceFadeInAdjacentScreens;
+    private boolean mWorkspaceFadeInAdjacentScreens;//是否以淡入的方式切换毗邻之间的屏幕.(大屏时为真)
 
     // Camera and Matrix used to determine the final position of a neighboring CellLayout
     private final Matrix mMatrix = new Matrix();
@@ -602,21 +602,22 @@ public class Workspace extends SmoothPagedView
         }
     }
 
-    /**reach here
+    /**
      * Check if the point (x, y) hits a given page.
+     * 点(x,y)是不是在索引为index的Page上
      */
     private boolean hitsPage(int index, float x, float y) {
         final View page = getChildAt(index);
         if (page != null) {
             float[] localXY = { x, y };
-            mapPointFromSelfToChild(page, localXY);
+            mapPointFromSelfToChild(page, localXY);//把全局坐标转化为相对于child的坐标
             return (localXY[0] >= 0 && localXY[0] < page.getWidth()
                     && localXY[1] >= 0 && localXY[1] < page.getHeight());
         }
         return false;
     }
 
-    @Override
+    @Override//reach here
     protected boolean hitsPreviousPage(float x, float y) {
         // mNextPage is set to INVALID_PAGE whenever we are stationary.
         // Calculating "next page" this way ensures that you scroll to whatever page you tap on
@@ -2575,8 +2576,8 @@ public class Workspace extends SmoothPagedView
         return null;
     }
 
-    /*
-    *
+   /**
+    * 把父视图上的坐标,转化为相对于子视图CellLayou上的坐标.返回的相对于子视图的坐标值将保存于传入的参数xy中.
     * Convert the 2D coordinate xy from the parent View's coordinate space to this CellLayout's
     * coordinate space. The argument xy is modified with the return result.
     *
@@ -2585,8 +2586,8 @@ public class Workspace extends SmoothPagedView
        mapPointFromSelfToChild(v, xy, null);
    }
 
-   /*
-    *
+   /**
+    * http://www.th7.cn/Program/Android/201403/185391.shtml
     * Convert the 2D coordinate xy from the parent View's coordinate space to this CellLayout's
     * coordinate space. The argument xy is modified with the return result.
     *
@@ -2596,25 +2597,27 @@ public class Workspace extends SmoothPagedView
     *
     */
    void mapPointFromSelfToChild(View v, float[] xy, Matrix cachedInverseMatrix) {
-       if (cachedInverseMatrix == null) {
+       if (cachedInverseMatrix == null) {//view.getMatrix()似乎是view自身的变换矩阵,如旋转,缩放等.
            v.getMatrix().invert(mTempInverseMatrix);
-           cachedInverseMatrix = mTempInverseMatrix;
+           cachedInverseMatrix = mTempInverseMatrix;//还原变换的变换矩阵
        }
-       int scrollX = getScrollX();
+       int scrollX = getScrollX();//视图被卷起来不可见的部分
        if (mNextPage != INVALID_PAGE) {
-           scrollX = mScroller.getFinalX();
+           scrollX = mScroller.getFinalX();//
        }
+       //获得相对于子视图的坐标.
        xy[0] = xy[0] + scrollX - v.getLeft();
        xy[1] = xy[1] + getScrollY() - v.getTop();
-       cachedInverseMatrix.mapPoints(xy);
+       cachedInverseMatrix.mapPoints(xy);//运用还原矩阵,变换还原回去
    }
 
-   /*
+   /** reach here:
+    * 把workspace上的坐标,转化为hotseat上的坐标.
     * Maps a point from the Workspace's coordinate system to another sibling view's. (Workspace
     * covers the full screen)
     */
    void mapPointFromSelfToSibling(View v, float[] xy) {
-       xy[0] = xy[0] - v.getLeft();
+       xy[0] = xy[0] - v.getLeft();//坐标系下移.
        xy[1] = xy[1] - v.getTop();
    }
 

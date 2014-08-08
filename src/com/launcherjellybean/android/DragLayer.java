@@ -289,22 +289,31 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
      * Given a coordinate relative to the descendant, find the coordinate in this DragLayer's
      * coordinates.
      *
+     * 将子View的坐标转换为父View中的坐标.
      * @param descendant The descendant to which the passed coordinate is relative.
      * @param coord The coordinate that we want mapped.
      * @return The factor by which this descendant is scaled relative to this DragLayer.
+     * 其中，descendant 是子View，coord是在descendant中的坐标值。而这个函数是父View的函数。
+     * 当然，我们可以加一个参数，指定父View。
      */
     public float getDescendantCoordRelativeToSelf(View descendant, int[] coord) {
         float scale = 1.0f;
         float[] pt = {coord[0], coord[1]};
+        //把相对于子View上的坐标,进行与子View一样的矩阵变换,这样坐标就映射到了视图上的合适位置
         descendant.getMatrix().mapPoints(pt);
+      //转换为直接父窗口的坐标
         scale *= descendant.getScaleX();
         pt[0] += descendant.getLeft();
         pt[1] += descendant.getTop();
         ViewParent viewParent = descendant.getParent();
+      //循环获得父窗口的父窗口，并且依次计算在每个父窗口中的坐标
         while (viewParent instanceof View && viewParent != this) {
             final View view = (View)viewParent;
             view.getMatrix().mapPoints(pt);
-            scale *= view.getScaleX();
+            scale *= view.getScaleX();//这个是计算X的缩放值。此处可以不管
+          //转换为相当于可视区左上角的坐标，scrollX，scollY是去掉滚动的影响
+          //卷起来的部分不算,说明算出来的坐标不但是相对于父视图,
+          //而且父视图卷起不可见的部分不算在内,即要求坐标点在父视图的可见部分的坐标.
             pt[0] += view.getLeft() - view.getScrollX();
             pt[1] += view.getTop() - view.getScrollY();
             viewParent = view.getParent();
