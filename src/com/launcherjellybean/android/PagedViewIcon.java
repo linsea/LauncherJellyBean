@@ -22,11 +22,13 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 /**
+ * 类似于BubbleTextView的图标,用在AllApps页面上的图标(包括widget).
  * An icon on a PagedView, specifically for items in the launcher's paged view (with compound
  * drawables on the top).
  */
 public class PagedViewIcon extends TextView {
-    /** A simple callback interface to allow a PagedViewIcon to notify when it has been pressed */
+    /** 图标被点击后的回调接口.
+     *  A simple callback interface to allow a PagedViewIcon to notify when it has been pressed */
     public static interface PressedCallback {
         void iconPressed(PagedViewIcon icon);
     }
@@ -58,7 +60,7 @@ public class PagedViewIcon extends TextView {
         mPressedCallback = cb;
         setCompoundDrawablesWithIntrinsicBounds(null, new FastBitmapDrawable(mIcon), null, null);
         setText(info.title);
-        setTag(info);
+        setTag(info);//与这个图标关联的ApplicationInfo
     }
 
     public void lockDrawableState() {

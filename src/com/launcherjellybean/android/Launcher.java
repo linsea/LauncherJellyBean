@@ -3731,6 +3731,7 @@ public final class Launcher extends Activity
     }
 }
 
+/**过渡特效接口*/
 interface LauncherTransitionable {
     View getContent();
     void onLauncherTransitionPrepare(Launcher l, boolean animated, boolean toWorkspace);

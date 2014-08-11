@@ -84,6 +84,12 @@ public class PagedViewIconCache {
         }
         mIconOutlineCache.clear();
     }
+    
+    /**
+     * 
+     * @param keysToKeep 需要保留的
+     * @param t 保留部分之外的,keyType类型为t的需要删除的.
+     */
     private void retainAll(HashSet<Key> keysToKeep, Key.Type t) {
         HashSet<Key> keysToRemove = new HashSet<Key>(mIconOutlineCache.keySet());
         keysToRemove.removeAll(keysToKeep);
@@ -94,7 +100,9 @@ public class PagedViewIconCache {
             }
         }
     }
-    /** Removes all the keys to applications that aren't in the passed in collection */
+    /** 
+     * 移除缓存中所有的key不在参数keys里面的ApplicationInfo
+     * Removes all the keys to applications that aren't in the passed in collection */
     public void retainAllApps(ArrayList<ApplicationInfo> keys) {
         HashSet<Key> keysSet = new HashSet<Key>();
         for (ApplicationInfo info : keys) {
