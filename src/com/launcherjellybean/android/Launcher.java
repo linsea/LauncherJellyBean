@@ -893,7 +893,7 @@ public final class Launcher extends Activity
 
         // Setup the workspace
         mWorkspace.setHapticFeedbackEnabled(false);
-        mWorkspace.setOnLongClickListener(this);
+        mWorkspace.setOnLongClickListener(this);//这个Listener也是Workspace中所有CellLayout的Listener
         mWorkspace.setup(dragController);
         dragController.addDragListener(mWorkspace);
 
@@ -2199,6 +2199,7 @@ public final class Launcher extends Activity
         folder.animateClosed();
     }
 
+  //处理Workspace中所有CellLayout的长按事件
     public boolean onLongClick(View v) {
         if (!isDraggingEnabled()) return false;
         if (isWorkspaceLocked()) return false;

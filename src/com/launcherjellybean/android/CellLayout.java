@@ -890,6 +890,16 @@ public class CellLayout extends ViewGroup {
         return r;
     }
 
+    /**
+     * 获取CellLayout的各参数值:cellWidth, cellHeight, widthGap, heightGap
+     * @param metrics 保存返回的计算值
+     * @param res
+     * @param measureWidth
+     * @param measureHeight
+     * @param countX
+     * @param countY
+     * @param orientation
+     */
     static void getMetrics(Rect metrics, Resources res, int measureWidth, int measureHeight,
             int countX, int countY, int orientation) {
         int numWidthGaps = countX - 1;
@@ -1621,6 +1631,7 @@ public class CellLayout extends ViewGroup {
         return bestXY;
     }
 
+    /**这个参数Rect的(left, top, right bottom)貌似对应(cellX, cellY, spanX, spanY)*/
     private boolean addViewToTempLocation(View v, Rect rectOccupiedByPotentialDrop,
             int[] direction, ItemConfiguration currentState) {
         CellAndSpan c = currentState.map.get(v);
@@ -1636,7 +1647,7 @@ public class CellLayout extends ViewGroup {
             success = true;
 
         }
-        markCellsForView(c.x, c.y, c.spanX, c.spanY, mTmpOccupied, true);
+        markCellsForView(c.x, c.y, c.spanX, c.spanY, mTmpOccupied, true);//还原状态
         return success;
     }
 
@@ -1767,6 +1778,8 @@ public class CellLayout extends ViewGroup {
         return success;
     }
 
+    /**标记Rect所占空间的格子为占用或空间状态,
+     * 这个参数Rect的(left, top, right bottom)貌似对应(cellX, cellY, spanX, spanY)*/
     private void markCellsForRect(Rect r, boolean[][] occupied, boolean value) {
         markCellsForView(r.left, r.top, r.width(), r.height(), occupied, value);
     }
@@ -2470,14 +2483,14 @@ public class CellLayout extends ViewGroup {
         HashMap<View, CellAndSpan> map = new HashMap<View, CellAndSpan>();
         boolean isSolution = false;
         int dragViewX, dragViewY, dragViewSpanX, dragViewSpanY;
-
+        /**返回dragView面积*/
         int area() {
             return dragViewSpanX * dragViewSpanY;
         }
     }
 
     private class CellAndSpan {
-        int x, y;
+        int x, y;//这是格子坐标
         int spanX, spanY;
 
         public CellAndSpan(int x, int y, int spanX, int spanY) {
@@ -2895,7 +2908,7 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         markCellsForView(lp.cellX, lp.cellY, lp.cellHSpan, lp.cellVSpan, occupied, false);
     }
 
-    /**标记指定的格子为占用状态,主要是为某个Item标记格子空间*/
+    /**标记指定的格子为占用或空闲状态,主要是为某个Item标记格子空间*/
     private void markCellsForView(int cellX, int cellY, int spanX, int spanY, boolean[][] occupied,
             boolean value) {
         if (cellX < 0 || cellY < 0) return;

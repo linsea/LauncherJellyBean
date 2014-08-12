@@ -13,6 +13,13 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
+<!-- 
+http://www.cnblogs.com/devinzhang/archive/2012/01/18/2325887.html
+继承普通Activity，<TabWidget>标签id必须为tabs、<FrameLayout>标签id必须为tabcontent.
+这个方式在通过findViewById获得TabHost之后，必须要调用setup方法。
+TabHost必须包含一个 TabWidget和一个FrameLayout
+--> 
+  
 <com.launcherjellybean.android.AppsCustomizeTabHost
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:launcher="http://schemas.android.com/apk/res/com.launcherjellybean.android"
@@ -31,6 +38,7 @@
             android:layout_height="@dimen/apps_customize_tab_bar_height"
             android:layout_marginTop="@dimen/apps_customize_tab_bar_margin_top"
             android:layout_gravity="center_horizontal">
+            <!--继承普通Activity， TabWidget的id属性必须为 @android:id/tabs-->     
             <com.launcherjellybean.android.FocusOnlyTabWidget
                 android:id="@android:id/tabs"
                 android:layout_width="match_parent"
@@ -46,6 +54,9 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="right" />
         </FrameLayout>
+        
+        
+        <!-- FrameLayout的id属性必须为 @android:id/tabcontent-->  
         <FrameLayout
             android:id="@android:id/tabcontent"
             android:layout_width="match_parent"

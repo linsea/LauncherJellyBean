@@ -37,7 +37,10 @@ import android.widget.TextView;
 import com.launcherjellybean.android.R;
 
 import java.util.ArrayList;
-
+//http://www.cnblogs.com/devinzhang/archive/2012/01/18/2325887.html
+//http://www.apkbus.com/android-720-1-1.html
+//http://blog.csdn.net/xinem/article/details/7083523
+//另外参考ActionBarSherlock,里面关于Tab使用很全.
 public class AppsCustomizeTabHost extends TabHost implements LauncherTransitionable,
         TabHost.OnTabChangeListener  {
     static final String LOG_TAG = "AppsCustomizeTabHost";

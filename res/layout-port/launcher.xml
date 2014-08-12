@@ -25,13 +25,16 @@
 
     <!-- Keep these behind the workspace so that they are not visible when
          we go into AllApps -->
-    <include
+    <include 
         android:id="@+id/dock_divider"
         layout="@layout/workspace_divider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/button_bar_height"
-        android:layout_gravity="bottom" />
+        android:layout_gravity="bottom" /> 
+     <!-- workspace_divider.xml包含了一ImageView，其实dock_divider就是dock区域上面的那条直线 -->    
+    
+    
     <include
         android:id="@+id/paged_view_indicator"
         layout="@layout/scroll_indicator"
@@ -39,7 +42,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_marginBottom="@dimen/button_bar_height" />
-
+	<!-- 实际上就是当Launcher滚动翻页的时候，那个淡蓝色的页面指示条。 -->
+    
+    
     <!-- The workspace contains 5 screens of cells -->
     <com.launcherjellybean.android.Workspace
         android:id="@+id/workspace"
@@ -68,10 +73,15 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/button_bar_height_plus_padding"
         android:layout_gravity="bottom" />
+	<!-- 一个Hotseat,其实就是那块dock区域了，它包含了一个CellLayout，用来承载4个图标和中间启动所有程序的按钮。 -->
 
+    
     <include
         android:id="@+id/qsb_bar"
         layout="@layout/qsb_bar" />
+<!--     屏幕最顶端的Google搜索框。这个搜索框是独立于图标界面的，
+   		  所以当我们对桌面进行翻页的时候，这个搜索框会巍然不动滴固定在最顶端 -->
+    
 
     <com.launcherjellybean.android.DrawableStateProxyView
         android:id="@+id/voice_button_proxy"
@@ -88,7 +98,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="invisible" />
-
+<!-- apps_customize_pane，点击dock中显示所有应用程序的按钮后才会从隐藏状态转换为显示状态 -->
+    
+    
     <include layout="@layout/workspace_cling"
         android:id="@+id/workspace_cling"
         android:layout_width="match_parent"

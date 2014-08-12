@@ -79,6 +79,8 @@ public class DragController {
     static final int SCROLL_LEFT = 0;
     static final int SCROLL_RIGHT = 1;
 
+    //拖住一个图标,然后猛地向上掷出去,图标就会往上方的删除区域飞去,最后删除掉.
+    //此值表示向上掷出去时,方向与Y轴的夹角最大为35度,大于此值掷出去不会被删除.
     private static final float MAX_FLING_DEGREES = 35f;
 
     private Launcher mLauncher;
@@ -110,7 +112,7 @@ public class DragController {
     /** Who can receive drop events */
     private ArrayList<DropTarget> mDropTargets = new ArrayList<DropTarget>();
     private ArrayList<DragListener> mListeners = new ArrayList<DragListener>();
-    /**接收拖放删除的目标对象*/
+    /**接收拖放删除的目标对象,就是最顶上面接收删除的区域*/
     private DropTarget mFlingToDeleteDropTarget;
 
     /** The window token used as the parent for the DragView. */
@@ -127,7 +129,10 @@ public class DragController {
     private int mScrollState = SCROLL_OUTSIDE_ZONE;
     private ScrollRunnable mScrollRunnable = new ScrollRunnable();
 
-    private DropTarget mLastDropTarget;//最后接收Drop动作的目标对象
+    //最后接收Drop动作的目标对象.
+    //是否拖动的过程中,这个对象会一直变化着,如一个图标在移动的过程中,在文件夹之间游走时,
+    //这个值也在多个文件夹之间变化着呢???
+    private DropTarget mLastDropTarget;
 
     private InputMethodManager mInputMethodManager;
 
@@ -176,7 +181,7 @@ public class DragController {
         mVibrator = (Vibrator) launcher.getSystemService(Context.VIBRATOR_SERVICE);
 
         float density = r.getDisplayMetrics().density;
-        mFlingToDeleteThresholdVelocity = //为什么是负数???
+        mFlingToDeleteThresholdVelocity = //为什么是负数??? 因为向上滑动
                 (int) (r.getInteger(R.integer.config_flingToDeleteMinVelocity) * density);
     }
 
@@ -648,9 +653,10 @@ public class DragController {
     }
 
     /**
+     * 判断是否是快速滑动删除图标.
      * Determines whether the user flung the current item to delete it.
-     *
-     * @return the vector at which the item was flung, or null if no fling was detected.
+     * @return 包括X,Y轴方向的速度向量.或者如果此动作不是掷出删除操作,则为null.
+     * the vector at which the item was flung, or null if no fling was detected.
      */
     private PointF isFlingingToDelete(DragSource source) {
         if (mFlingToDeleteDropTarget == null) return null;
@@ -659,6 +665,7 @@ public class DragController {
         ViewConfiguration config = ViewConfiguration.get(mLauncher);
         mVelocityTracker.computeCurrentVelocity(1000, config.getScaledMaximumFlingVelocity());
 
+      //因为是向上滑动,这里速度是负数,用小于则速度的绝对值大于定义的阈值.
         if (mVelocityTracker.getYVelocity() < mFlingToDeleteThresholdVelocity) {
             // Do a quick dot product test to ensure that we are flinging upwards
             PointF vel = new PointF(mVelocityTracker.getXVelocity(),
@@ -673,6 +680,7 @@ public class DragController {
         return null;
     }
 
+    /**drop到屏幕顶上方的目标区域*/
     private void dropOnFlingToDeleteTarget(float x, float y, PointF vel) {
         final int[] coordinates = mCoordinatesTemp;
 
@@ -682,7 +690,7 @@ public class DragController {
         // Clean up dragging on the target if it's not the current fling delete target otherwise,
         // start dragging to it.
         if (mLastDropTarget != null && mFlingToDeleteDropTarget != mLastDropTarget) {
-            mLastDropTarget.onDragExit(mDragObject);
+            mLastDropTarget.onDragExit(mDragObject);//这里清理一下,移出了mLastDropTarget.
         }
 
         // Drop onto the fling-to-delete target

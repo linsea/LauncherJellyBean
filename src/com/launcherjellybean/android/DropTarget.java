@@ -75,8 +75,8 @@ public interface DropTarget {
         }
     }
 
+    /**一个DragController.DragListener的简单实现,监视Drag的开始与结束,打印Log*/
     public static class DragEnforcer implements DragController.DragListener {
-        /**一个DragController.DragListener的简单实现,监视Drag的开始与结束,打印Log*/
     	int dragParity = 0;
 
         public DragEnforcer(Context context) {
