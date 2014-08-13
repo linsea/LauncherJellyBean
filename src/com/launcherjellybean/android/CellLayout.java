@@ -890,6 +890,16 @@ public class CellLayout extends ViewGroup {
         return r;
     }
 
+    /**
+     * 获取CellLayout的各参数值:cellWidth, cellHeight, widthGap, heightGap
+     * @param metrics 保存返回的计算值
+     * @param res
+     * @param measureWidth
+     * @param measureHeight
+     * @param countX
+     * @param countY
+     * @param orientation
+     */
     static void getMetrics(Rect metrics, Resources res, int measureWidth, int measureHeight,
             int countX, int countY, int orientation) {
         int numWidthGaps = countX - 1;
