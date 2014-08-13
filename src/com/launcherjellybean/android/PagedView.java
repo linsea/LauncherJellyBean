@@ -964,16 +964,16 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
                  * mIsBeingDragged == false, otherwise the shortcut would have caught it. Check
                  * whether the user has moved far enough from his original down touch.
                  */
-            	 /** 
-            	  * 当在这里接受到ACTION_MOVE时，说明mTouchState!=TOUCH_STATE_SCROLLING
-            	  * 并且mIsBeingDragged的值应该为false，否则DragLayer就应该截获了MotionEvent用于实现拖拽。 
-            	  * 此时还没有进入滑动状态，当mActivePointerId == INVALID_POINTER时，也就是在此之前没有
-            	  * 接收到任何touch事件。这种情况发生在Workspace变小时，也就是之前Workspace处于
-            	  * SPRING_LOADED状态。 当出现这种情况时直接把当前的事件当作ACTION_DOWN进行处理。 
-            	  * 反之，则通过determineScrollingStart()尝试能否进入滑动状态。 
-            	  * 
-            	  * (SPRING_LOADED状态是指在All Apps页面长按一个应用,然后进入到桌面的状态.)
-            	  */  
+                 /** 
+                  * 当在这里接受到ACTION_MOVE时，说明mTouchState!=TOUCH_STATE_SCROLLING
+                  * 并且mIsBeingDragged的值应该为false，否则DragLayer就应该截获了MotionEvent用于实现拖拽。 
+                  * 此时还没有进入滑动状态，当mActivePointerId == INVALID_POINTER时，也就是在此之前没有
+                  * 接收到任何touch事件。这种情况发生在Workspace变小时，也就是之前Workspace处于
+                  * SPRING_LOADED状态。 当出现这种情况时直接把当前的事件当作ACTION_DOWN进行处理。 
+                  * 反之，则通过determineScrollingStart()尝试能否进入滑动状态。 
+                  * 
+                  * (SPRING_LOADED状态是指在All Apps页面长按一个应用,然后进入到桌面的状态.)
+                  */  
                 if (mActivePointerId != INVALID_POINTER) {
                     determineScrollingStart(ev);
                     break;
