@@ -1897,7 +1897,7 @@ public class Workspace extends SmoothPagedView
         //使图标从桌面上消失，给人一种被“拖到空中”的感觉 
         child.setVisibility(INVISIBLE);//使被拖动的图标不可视
         CellLayout layout = (CellLayout) child.getParent().getParent();
-        layout.prepareChildForDrag(child);//使被拖动的图标所在的格式标记为没有占用
+        layout.prepareChildForDrag(child);//使被拖动的图标所在的格子标记为没有占用
 
         child.clearFocus();//这个图标不可见了,那么它不应该还有焦点.
         child.setPressed(false);//设置它的按下状态为false
@@ -2427,6 +2427,13 @@ public class Workspace extends SmoothPagedView
         }
     }
 
+    /**
+     * 获取CellLayout的各参数值:cellWidth, cellHeight, widthGap, heightGap.
+     * 保存到mLandscapeCellLayoutMetrics,mLandscapeCellLayoutMetrics
+     * @param launcher
+     * @param orientation
+     * @return
+     */
     static Rect getCellLayoutMetrics(Launcher launcher, int orientation) {
         Resources res = launcher.getResources();
         Display display = launcher.getWindowManager().getDefaultDisplay();
@@ -3520,7 +3527,7 @@ public class Workspace extends SmoothPagedView
         boolean result = false;
         if (mInScrollArea) {
             invalidate();
-            CellLayout layout = getCurrentDropLayout();
+            CellLayout layout = getCurrentDropLayout();//下一页的CellLayout
             setCurrentDropLayout(layout);
             setCurrentDragOverlappingLayout(layout);
 
@@ -3536,6 +3543,7 @@ public class Workspace extends SmoothPagedView
     }
 
     /**
+     * 寻找包含这个View的父亲CellLayout.
      * Returns a specific CellLayout
      */
     CellLayout getParentCellLayoutForView(View v) {
@@ -3584,6 +3592,11 @@ public class Workspace extends SmoothPagedView
         return childrenLayouts;
     }
 
+    /**
+     * 寻找携带这个tag的Folder
+     * @param tag
+     * @return
+     */
     public Folder getFolderForTag(Object tag) {
         ArrayList<ShortcutAndWidgetContainer> childrenLayouts =
                 getAllShortcutAndWidgetContainers();
@@ -3826,12 +3839,15 @@ public class Workspace extends SmoothPagedView
 
     @Override
     protected String getCurrentPageDescription() {
-        //mCurrentPage从0开始计数.为什么当前屏幕要返回mNextPage???
+        //mCurrentPage从0开始计数.为什么当前屏幕要返回mNextPage???因为是从0开始计数的?
         int page = (mNextPage != INVALID_PAGE) ? mNextPage : mCurrentPage;
         return String.format(getContext().getString(R.string.workspace_scroll_format),
                 page + 1, getChildCount());//为什么 page要加1
     }
 
+    /**
+     * 寻找workspace本身在DragLayer上的位置.
+     */
     public void getLocationInDragLayer(int[] loc) {
         mLauncher.getDragLayer().getLocationInDragLayer(this, loc);
     }
