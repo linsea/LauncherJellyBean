@@ -1952,6 +1952,9 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
     }
 
     @Override
+    //HoverEvent包含三种动作:MotionEvent.ACTION_HOVER_ENTER, 
+    //MotionEvent.ACTION_HOVER_MOVE,
+    //MotionEvent.ACTION_HOVER_EXIT,可判断是哪一种来决定采取何种处理逻辑.
     public boolean onHoverEvent(android.view.MotionEvent event) {
         return true;
     }
