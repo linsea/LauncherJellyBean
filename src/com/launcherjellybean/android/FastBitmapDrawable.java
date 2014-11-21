@@ -24,16 +24,19 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
-/**一个辅助类,把传入的Bitmap进行一些处理,然后返回一个新的处理过后的Bitmap*/
+/**一个辅助类,把传入的Bitmap进行一些处理,然后返回一个Drawable,
+ * 主要是类型转换作用,便于设置桌面图标(TextView)的上方的图片,它需要的参数是Drawable*/
 class FastBitmapDrawable extends Drawable {
     private Bitmap mBitmap;
     private int mAlpha;
     private int mWidth;
     private int mHeight;
-    private final Paint mPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
+    
+    //http://doublekj.blog.163.com/blog/static/146818474201171555942247/
+    private final Paint mPaint = new Paint(Paint.FILTER_BITMAP_FLAG);//Paint滤波器,对bitmap抗锯齿.
 
     FastBitmapDrawable(Bitmap b) {
-	mAlpha = 255;
+        mAlpha = 255;
         mBitmap = b;
         if (b != null) {
             mWidth = mBitmap.getWidth();
