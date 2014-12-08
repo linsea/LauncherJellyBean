@@ -1900,7 +1900,7 @@ public class Workspace extends SmoothPagedView
         layout.prepareChildForDrag(child);//使被拖动的图标所在的格子标记为没有占用
 
         child.clearFocus();//这个图标不可见了,那么它不应该还有焦点.
-        child.setPressed(false);//设置它的按下状态为false
+        child.setPressed(false);//设置它的按下状态为false,就像这个View没有被按下过似的.
 
         final Canvas canvas = new Canvas();
 

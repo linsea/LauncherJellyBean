@@ -79,7 +79,7 @@
     <include
         android:id="@+id/qsb_bar"
         layout="@layout/qsb_bar" />
-<!--     屏幕最顶端的Google搜索框。这个搜索框是独立于图标界面的，
+<!--     屏幕最顶端的Google搜索框/删除框,应用信息框。这个框是独立于图标界面的，
    		  所以当我们对桌面进行翻页的时候，这个搜索框会巍然不动滴固定在最顶端 -->
     
 
@@ -101,12 +101,14 @@
 <!-- apps_customize_pane，点击dock中显示所有应用程序的按钮后才会从隐藏状态转换为显示状态 -->
     
     
+    <!-- 刚启动的时候显示的指导页 -->  
     <include layout="@layout/workspace_cling"
         android:id="@+id/workspace_cling"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
 
+    <!-- 是第一次进入全部应用之后显示的指导页 -->  
     <include layout="@layout/folder_cling"
         android:id="@+id/folder_cling"
         android:layout_width="match_parent"
